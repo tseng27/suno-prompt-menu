@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Suno 提示詞對照選單｜ELARA / HANA</title>
+<title>Suno 提示詞對照選單</title>
 <meta name="description" content="Suno 風格欄、歌詞標籤、Exclude Styles 與滑桿的對照選單，含代表歌曲、Exclude 配對，以及可複製的提示詞組合器。">
 <style>
   :root {
@@ -114,9 +114,9 @@
 <body>
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">ELARA · HANA · Suno v6</p>
+    <p class="eyebrow">Suno v6 Custom</p>
     <h1>Suno 提示詞對照選單</h1>
-    <p class="lead">依風格欄七個元素排列，點選即可組成提示詞。每項附英文標籤、中文說明、代表歌曲，以及建議的 Exclude Styles。適合 HANA 的強項：韓系 R&amp;B、輕柔氛圍抒情、東方樂器華語抒情，還有夢幻氣聲女聲。歌詞欄的方括號標籤是社群慣例，不是官方語法。</p>
+    <p class="lead">依風格欄七個元素排列，點選即可組成提示詞。每項附英文標籤、中文說明、代表歌曲，以及建議的 Exclude Styles。涵蓋常見方向：韓系 R&amp;B、輕柔氛圍抒情、東方樂器華語抒情，還有夢幻氣聲女聲。歌詞欄的方括號標籤是社群慣例，不是官方語法。</p>
   </header>
 
   <div class="toolbar">
@@ -162,7 +162,7 @@ const ELEMENTS = [
   { id: "mood", order: 2, name: "2 情緒 Mood", blurb: "寫聽得出來的感覺，避免 beautiful、professional 這種空話。" },
   { id: "tempo", order: 3, name: "3 速度與律動 Tempo / Groove", blurb: "BPM 只是大約方向，建議寫 around N BPM，Suno 不會精準卡在那個速度。" },
   { id: "instruments", order: 4, name: "4 樂器與分工 Instruments", blurb: "寫出主奏與伴奏，兩到四樣即可。重點是每樣負責什麼，而不是把樂器列一長串。" },
-  { id: "vocals", order: 5, name: "5 人聲 Vocals", blurb: "寫性別、音色與唱法。HANA 最穩的是夢幻氣聲、近講親密感，副歌再疊和聲。" },
+  { id: "vocals", order: 5, name: "5 人聲 Vocals", blurb: "寫性別、音色與唱法。夢幻氣聲、近講親密感很常用，副歌再疊和聲。" },
   { id: "structure", order: 6, name: "6 結構與起伏 Structure", blurb: "讓主歌收著唱、副歌放開。熱門歌幾乎都有這種起伏。" },
   { id: "production", order: 7, name: "7 製作質感與空間 Production", blurb: "用一句場景或混音質感統一整首歌的氣氛。" },
   { id: "lyrics", order: 8, name: "歌詞欄結構標籤", blurb: "方括號標籤放在歌詞欄、獨立一行，寫在該段歌詞上方。這是社群慣例，不是 Suno 官方語法。重複的副歌要用一模一樣的字。不要在歌詞欄寫曲風或 BPM，以免被唱出來。" },
@@ -176,7 +176,7 @@ const OPTIONS = [
   { id: "rnb", el: "genre", tag: "contemporary R&B", zh: "當代 R&B。中板律動、親密人聲，低音溫暖，副歌可以打開但不需電音落下。", songs: "SZA〈Kill Bill〉、The Weeknd〈Die For You〉", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "R&B 靠柔軟人聲與律動，喊唱與硬搖滾會蓋過人聲。" },
   { id: "kpop", el: "genre", tag: "K-pop", zh: "韓流流行。旋律鉤子清楚，主副歌對比鮮明，和聲與預副歌（pre-chorus）常很完整。", songs: "IU〈Blueming〉", exclude: ["death metal","screaming","heavy distortion","country banjo"], why: "K-Pop 要乾淨旋律與人聲層次，極端重型曲風會把鉤子蓋掉。" },
   { id: "kpop-dance", el: "genre", tag: "K-pop electro dance", zh: "韓系電音舞曲。節拍明確、合成器亮、副歌衝擊強，偏女團舞曲走向。", songs: "A2O〈NEON〉（2026年11月台灣 Spotify／韓國 Melon 榜熱門）", exclude: ["funeral dirge","acoustic campfire folk","death metal","country banjo"], why: "電音舞曲需要清晰節拍與合成器衝擊，葬禮進行曲或純粹campfire原音會把律動抽走。" },
-  { id: "krnb", el: "genre", tag: "Korean R&B", zh: "韓系 R&B。氣聲或柔聲、夜間城市感，節奏搖擺但不攻擊。HANA 的強項之一。", songs: "Crush〈Beautiful〉、Heize〈You, Clouds, Rain〉（비도 오고 그래서）", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "韓系 R&B 靠柔軟人聲與夜間律動，喊唱與硬搖滾會蓋過人聲。" },
+  { id: "krnb", el: "genre", tag: "Korean R&B", zh: "韓系 R&B。氣聲或柔聲、夜間城市感，節奏搖擺但不攻擊。", songs: "Crush〈Beautiful〉、Heize〈You, Clouds, Rain〉（비도 오고 그래서）", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "韓系 R&B 靠柔軟人聲與夜間律動，喊唱與硬搖滾會蓋過人聲。" },
   { id: "mando-ballad", el: "genre", tag: "Mandopop ballad", zh: "華語抒情。中慢板、旋律先行，鋼琴或弦樂托著人聲，情緒比節奏更重要。", songs: "李佳薇〈甲乙丙丁〉（2026年11月 KKBOX 華語榜）、孫燕姿〈我不難過〉", exclude: ["trap hi-hats","EDM drop","heavy metal","rap"], why: "華語抒情以旋律與情緒為主，陷阱鼓與電音落下會把氣氛拉走。" },
   { id: "oriental", el: "genre", tag: "Oriental pop ballad", zh: "東方樂器流行抒情。古箏、琵琶、二胡與現代人聲、鋼琴並置，留白很重要。", songs: "周杰倫〈青花瓷〉、〈東風破〉", exclude: ["trap hi-hats","EDM drop","heavy metal","808 bass","rap"], why: "東方樂器需要音色空間與留白，重低音與電音會蓋過古箏、琵琶與二胡。" },
   { id: "indie-pop", el: "genre", tag: "Indie pop", zh: "獨立流行。旋律親民但音色較有個性，常帶夢幻合成器或溫暖吉他。", songs: "The 1975〈About You〉", exclude: ["death metal","screaming","hardstyle","bro-country"], why: "獨立流行偏氣氛與旋律線，極端重型或硬派鄉村會壓過合成器與人聲。" },
@@ -186,8 +186,8 @@ const OPTIONS = [
   { id: "alt-rnb", el: "genre", tag: "alternative R&B", zh: "另類 R&B。比主流 R&B 更空、更夜，常帶氣聲與低音遊走。", songs: "SZA〈Kill Bill〉、DEAN〈D (Half Moon)〉", exclude: ["heavy metal","punk","screaming","bagpipes"], why: "另類 R&B 要夜間律動與氣聲空間，硬核編制會擠掉低音。" },
   { id: "jpop", el: "genre", tag: "J-pop", zh: "日本流行。旋律完整、副歌開闊；創作型走向可偏另類流行或流行搖滾。", songs: "Vaundy〈しわあわせ〉、Mrs. GREEN APPLE〈ライラック〉", exclude: ["death metal","trap 808s","bro-country","screaming"], why: "J-Pop 旋律線要清楚，重型嘶吼或陷阱鼓會打斷副歌的開闊感。" },
   { id: "psych-pop", el: "genre", tag: "psychedelic pop", zh: "迷幻流行。相位感合成器、慵懶律動，音色會漂、會閃。", songs: "Tame Impala〈The Less I Know The Better〉、Tame Impala & JENNIE〈Dracula〉（2026）", exclude: ["death metal","acoustic campfire folk","opera","hardcore rap"], why: "迷幻流行靠相位合成器與慵懶律動，極端曲風或純粹營火原音會把迷幻層拿掉。" },
-  { id: "ambient-ballad", el: "genre", tag: "ambient pop ballad", zh: "氛圍抒情。速度慢、空間大，人聲幾乎貼在耳邊，適合輕柔浪漫的 HANA 路線。", songs: "Billie Eilish〈when the party's over〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","EDM drop","screaming","distortion"], why: "氛圍抒情靠留白與近距離人聲，攻擊性鼓組與失真會把空間擠掉。" },
-  { id: "country", el: "genre", tag: "contemporary country", zh: "當代鄉村。敘事清楚、吉他為主、人聲較直。這不是 HANA 的主路線，列在此方便對照與排除。", songs: "Ella Langley〈Choosin' Texas〉（2026年 Billboard Hot 100 長期冠軍）", exclude: ["EDM drop","trap 808s","screaming","robotic autotune"], why: "鄉村樂靠吉他、敘事與真實人聲，電音落下與機器人音高修正會走調。" },
+  { id: "ambient-ballad", el: "genre", tag: "ambient pop ballad", zh: "氛圍抒情。速度慢、空間大，人聲幾乎貼在耳邊，適合輕柔浪漫的氛圍抒情路線。", songs: "Billie Eilish〈when the party's over〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","EDM drop","screaming","distortion"], why: "氛圍抒情靠留白與近距離人聲，攻擊性鼓組與失真會把空間擠掉。" },
+  { id: "country", el: "genre", tag: "contemporary country", zh: "當代鄉村。敘事清楚、吉他為主、人聲較直。這不是夢幻或韓系抒情的主路線，列在此方便對照與排除。", songs: "Ella Langley〈Choosin' Texas〉（2026年 Billboard Hot 100 長期冠軍）", exclude: ["EDM drop","trap 808s","screaming","robotic autotune"], why: "鄉村樂靠吉他、敘事與真實人聲，電音落下與機器人音高修正會走調。" },
 
   // Mood
   { id: "nostalgic", el: "mood", tag: "nostalgic", zh: "懷舊。像想起舊照片或舊街道，溫暖但帶一點距離。", songs: "孫燕姿〈開始懂了〉、The 1975〈About You〉", exclude: ["festival drop","chipmunk vocals"], why: "懷舊需要時間感與餘韻，節慶落下或花栗鼠音高會把回憶感冲淡。" },
@@ -200,7 +200,7 @@ const OPTIONS = [
   { id: "dreamy", el: "mood", tag: "dreamy", zh: "夢幻、飄。殘響可以長一點，邊緣不必太銳。", songs: "Beach House〈Space Song〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","distortion","harsh clipping"], why: "夢幻靠柔邊與殘響，刺耳削波與攻擊性鼓會把霧氣驅散。" },
   { id: "romantic", el: "mood", tag: "romantic", zh: "浪漫。可以甜，但最好有真實的溫度，而不是空泛的漂亮。", songs: "Crush〈Beautiful〉、周杰倫〈晴天〉", exclude: ["screaming","horror drones","death metal"], why: "浪漫需要溫度與旋律，驚悚持續低音與嘶吼會把感情線拉斷。" },
   { id: "late-night", el: "mood", tag: "late-night city lights", zh: "深夜城市燈火。比 night-drive 更慢、更近，像收工後的街道。", songs: "Heize〈You, Clouds, Rain〉、The Weeknd〈Die For You〉", exclude: ["morning kids choir","festival drop","military snare"], why: "深夜城市要低螢幕亮度的感覺，兒童合唱或軍鼓會把時段走鐘。" },
-  { id: "dawn", el: "mood", tag: "dawn atmosphere", zh: "黎明、日出前。光是慢慢亮的，不是正午的大太陽。很適合 HANA 北塔日出。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones","aggressive drums"], why: "黎明要緩慢變亮，夜店熱曲或驚悚低音會把天亮的過程打斷。" },
+  { id: "dawn", el: "mood", tag: "dawn atmosphere", zh: "黎明、日出前。光是慢慢亮的，不是正午的大太陽。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones","aggressive drums"], why: "黎明要緩慢變亮，夜店熱曲或驚悚低音會把天亮的過程打斷。" },
   { id: "night-rain", el: "mood", tag: "night rain atmosphere", zh: "夜雨。潮濕、安靜，音符之間要留得住水氣。", songs: "Heize〈You, Clouds, Rain〉、楊丞琳〈雨愛〉", exclude: ["dry stadium mix","party horns","hardstyle"], why: "夜雨需要潮濕空間感，乾燥場館混音與派對喇叭會把雨氣蒸乾。" },
 
   // Tempo
@@ -210,7 +210,7 @@ const OPTIONS = [
   { id: "tempo-95", el: "tempo", tag: "mid-tempo around 95 BPM", zh: "經典中板。主歌可以收，副歌有空間往上推。", songs: "適合韓系 R&B 與夢幻流行的中板慣性速度（BPM 為約值）", exclude: ["funeral dirge","hardstyle kick"], why: "中板要能走路也能唱歌，葬禮速度或硬派踢鼓都會走偏。" },
   { id: "tempo-100", el: "tempo", tag: "around 100 BPM, laid-back groove", zh: "從容的中板律動，英式靈魂、柔派 R&B 常用。", songs: "Beyoncé〈Crazy in Love〉（約 100 BPM，律動更亮；柔派可把力道收住）", exclude: ["breakbeat rush","speed rap"], why: "從容律動怕被加速碎拍或快速說唱帶走。" },
   { id: "tempo-115", el: "tempo", tag: "around 115 BPM", zh: "偏俏的中快板，律動更明顯，仍可保留人聲溫度。", songs: "Mark Ronson, Bruno Mars〈Uptown Funk〉（約 115 BPM）", exclude: ["funeral dirge","drone ambient only"], why: "這個速度需要身體感，純持續低音或葬禮速度會把它拖住。" },
-  { id: "tempo-124", el: "tempo", tag: "dance groove around 124 BPM", zh: "舞曲中板。若要做 A2O 那類電音舞曲才需要；HANA 抒情主線通常較慢。", songs: "Dua Lipa〈Don't Start Now〉（約 124 BPM）", exclude: ["rubato free time","funeral dirge"], why: "舞曲律動需要穩定節拍，自由速度會讓鼓組站不穩。" },
+  { id: "tempo-124", el: "tempo", tag: "dance groove around 124 BPM", zh: "舞曲中板。適合電音舞曲與女團舞曲；抒情主線通常較慢。", songs: "Dua Lipa〈Don't Start Now〉（約 124 BPM）", exclude: ["rubato free time","funeral dirge"], why: "舞曲律動需要穩定節拍，自由速度會讓鼓組站不穩。" },
   { id: "tempo-170", el: "tempo", tag: "uptempo around 170 BPM", zh: "快板或帶半拍感的夜車流行。不一定要聽起來像拼命趕路。", songs: "The Weeknd〈Blinding Lights〉（約 171 BPM）", exclude: ["sluggish dirge","lo-fi tape drag"], why: "快板夜車流行需要向前推的脈衝，拖拍或葬禮速度會把它踩煞車。" },
   { id: "half-time", el: "tempo", tag: "half-time feel", zh: "半拍感。表面可以較慢、鼓點落在大格上，適合 R&B 與另類流行。", songs: "常見於當代 R&B 副歌的重量感處理", exclude: ["constant sixteenth hats"], why: "半拍感靠疏落的重拍，連續十六分音踩鑔會把它填滿。" },
 
@@ -228,7 +228,7 @@ const OPTIONS = [
   { id: "arp", el: "instruments", tag: "analog synth arpeggio", zh: "類比合成器分解和弦，適合迷幻或夜車氣氛，當裝飾而非全程主導。", songs: "Tame Impala〈The Less I Know The Better〉", exclude: ["acoustic campfire folk","opera choir"], why: "琶音合成器的迷幻循環會被營火民謠或歌劇合唱換走場景。" },
 
   // Vocals
-  { id: "breathy", el: "vocals", tag: "breathy female vocal", zh: "氣聲女聲。氣比力多，靠近麥克風，是 HANA 最核心的聲音。", songs: "Billie Eilish〈ocean eyes〉、王菲〈傳奇〉", exclude: ["male vocal","rap","screaming","autotune"], why: "氣聲女聲要保留呼吸與口形，男聲、說唱、嘶吼或重自動調音會換掉這條聲線。" },
+  { id: "breathy", el: "vocals", tag: "breathy female vocal", zh: "氣聲女聲。氣比力多，靠近麥克風，常是夢幻或氛圍抒情的核心聲線。", songs: "Billie Eilish〈ocean eyes〉、王菲〈傳奇〉", exclude: ["male vocal","rap","screaming","autotune"], why: "氣聲女聲要保留呼吸與口形，男聲、說唱、嘶吼或重自動調音會換掉這條聲線。" },
   { id: "close-mic", el: "vocals", tag: "close-mic, intimate", zh: "近麥克風、親密。能聽到氣口與唇齒，空間感不要太大。", songs: "Billie Eilish〈when the party's over〉、Norah Jones〈Don't Know Why〉", exclude: ["stadium reverb","screaming","male vocal"], why: "近講怕大空間殘響和遠距離喊唱，會把嘴唇前的距離拉開。" },
   { id: "stacked", el: "vocals", tag: "stacked harmonies in chorus", zh: "副歌疊和聲。主歌可以單聲，副歌再打開層次。", songs: "Ariana Grande〈God is a woman〉、ABBA〈Dancing Queen〉", exclude: ["monotone chant","screaming"], why: "疊和聲要音準與層次，單調念白或嘶吼會把和聲牆拆掉。" },
   { id: "soft-female", el: "vocals", tag: "soft female vocal", zh: "柔軟女聲。不必全程氣聲，但力道仍收著，咬字清楚。", songs: "Olivia Dean〈The Hardest Part〉、IU〈밤편지 / Through the Night〉", exclude: ["male vocal","screaming","rap"], why: "柔女聲與男聲主唱、嘶吼或說唱段落容易互相搶主導權。" },
@@ -264,7 +264,7 @@ const OPTIONS = [
   { id: "tag-outro", el: "lyrics", tag: "[Outro]", zh: "尾奏。可接淡出，或留一句收束。", songs: "結構對照：The Beatles〈Hey Jude〉淡出", exclude: [], why: "" },
 
   // Extra exclude nouns for the exclude section (selectable)
-  { id: "ex-male", el: "exclude", tag: "male vocal", zh: "排除男聲。做 HANA 時幾乎都要加。", songs: "—", exclude: [], why: "避免主唱性別被換成男聲。" },
+  { id: "ex-male", el: "exclude", tag: "male vocal", zh: "排除男聲。做氣聲或柔女聲主唱時幾乎都要加。", songs: "—", exclude: [], why: "避免主唱性別被換成男聲。" },
   { id: "ex-rap", el: "exclude", tag: "rap", zh: "排除說唱段落。", songs: "—", exclude: [], why: "避免副歌前後突然出現 rap verse。" },
   { id: "ex-auto", el: "exclude", tag: "autotune", zh: "排除明顯自動調音／機器人音高。", songs: "—", exclude: [], why: "氣聲與親密人聲通常不要硬邊 autotune。" },
   { id: "ex-drums", el: "exclude", tag: "heavy drums", zh: "排除重鼓。", songs: "—", exclude: [], why: "抒情與夢幻路線需要把鼓的重量壓下來。" },
@@ -274,7 +274,7 @@ const OPTIONS = [
   { id: "ex-scream", el: "exclude", tag: "screaming", zh: "排除嘶吼。", songs: "—", exclude: [], why: "與氣聲女聲完全相反。" },
   { id: "ex-hats", el: "exclude", tag: "trap hi-hats", zh: "排除陷阱踩鑔。", songs: "—", exclude: [], why: "保護華語抒情與東方樂器的留白。" },
   { id: "ex-808", el: "exclude", tag: "808 bass", zh: "排除 808 重低音。", songs: "—", exclude: [], why: "避免蓋過古箏、二胡與柔鋼琴。" },
-  { id: "ex-metal", el: "exclude", tag: "heavy metal", zh: "排除重金屬。", songs: "—", exclude: [], why: "與 HANA 的夢幻、韓系 R&B、東方抒情都衝突。" },
+  { id: "ex-metal", el: "exclude", tag: "heavy metal", zh: "排除重金屬。", songs: "—", exclude: [], why: "與夢幻流行、韓系 R&B、東方抒情都衝突。" },
   { id: "ex-hardstyle", el: "exclude", tag: "hardstyle", zh: "排除 hardstyle 硬派電音。", songs: "—", exclude: [], why: "踢鼓過硬，不適合中板靈魂或抒情。" }
 ];
 
@@ -284,28 +284,28 @@ const COMBOS = [
     title: "夢幻流行 × 韓系 R&B",
     style: "Dream pop, contemporary R&B, K-pop, breathy female vocals, airy synth pads underneath, warm analog bass, mid-tempo around 95 BPM, intimate verse, soaring chorus with stacked harmonies, cinematic night-drive mood",
     exclude: "heavy metal, distortion, rap, aggressive drums, EDM drop, screaming, male vocal",
-    note: "兩邊的交集：夢幻合成器、氣聲、有大高潮的副歌。接近全站熱門的 Indie / Art Pop，也接近你帳號裡較受歡迎的韓系抒情。"
+    note: "兩邊的交集：夢幻合成器、氣聲、有大高潮的副歌。接近全站熱門的 Indie / Art Pop，也適合韓系抒情。"
   },
   {
     id: "combo-mando-oriental",
     title: "華語抒情 × 東方樂器",
     style: "Mandopop ballad, guzheng countermelody, erhu countermelody, soft piano lead, sparse strings, dreamy breathy female vocal, slow tempo around 72 BPM, emotional and cinematic, night rain atmosphere, modern mix",
     exclude: "trap hi-hats, EDM drop, heavy metal, rap, 808 bass, autotune, male vocal",
-    note: "對應你較受歡迎的東方風抒情，例如〈墨下仕女圖〉那條線。樂器要寫出對位，而不是只列古箏二胡。"
+    note: "東方風華語抒情。樂器要寫出對位，而不是只列古箏二胡。"
   },
   {
     id: "combo-uk-krnb",
     title: "英式靈魂 × 韓系 R&B",
     style: "Soul pop, alternative R&B, UK soul, soft female vocal, vintage electric piano, brushed drums, warm analog bass, around 100 BPM, laid-back groove, tender, late-night city lights, rich harmonies, radio-ready chorus",
     exclude: "death metal, screaming, trap 808s, hardstyle, EDM drop, rap, distortion, male vocal",
-    note: "對應 2026年11月英國榜偏多的溫暖中板靈魂流行，再拉回你熟悉的韓系 R&B。"
+    note: "對應 2026年11月英國榜偏多的溫暖中板靈魂流行，再與韓系 R&B 結合。"
   },
   {
-    id: "combo-hana-dawn",
-    title: "HANA 黎明示例",
+    id: "combo-dawn-ballad",
+    title: "範例：黎明氛圍抒情",
     style: "Dream pop ballad, contemporary R&B, nostalgic and hopeful, mid-tempo around 90 BPM, soft piano lead, guzheng countermelody, airy synth pads underneath, breathy female vocal, close-mic, intimate, quiet verse building to a soaring chorus with stacked harmonies, warm cinematic mix, dawn atmosphere",
     exclude: "heavy metal, distortion, rap, aggressive drums, EDM drop, male vocal, screaming, trap hi-hats",
-    note: "專為 HANA 日出段落：氣聲近講、柔鋼琴與古箏對位，主歌收、副歌開，黎明慢慢亮起來。"
+    note: "氣聲近講、柔鋼琴與古箏對位，主歌收、副歌開，黎明慢慢亮起來。"
   }
 ];
 
@@ -523,7 +523,7 @@ function renderMain() {
 function renderCombos() {
   if (state.filter !== "all") return "";
   if (state.query && !COMBOS.some(c => (c.title + c.style + c.exclude + c.note).toLowerCase().includes(state.query.trim().toLowerCase()))) return "";
-  return '<section class="block" id="combos"><div class="kicker">Ready-made</div><h2>現成組合</h2><p class="hint">三組趨勢組合，加上一組 HANA 黎明示例。按「套用」會取代目前組合器中的風格與 Exclude。</p>' +
+  return '<section class="block" id="combos"><div class="kicker">Ready-made</div><h2>現成組合</h2><p class="hint">三組趨勢組合，加上一組黎明氛圍抒情示例。按「套用」會取代目前組合器中的風格與 Exclude。</p>' +
     COMBOS.map(c => '<div class="combo"><h3>' + escapeHtml(c.title) + '</h3><p class="hint" style="margin:0 0 6px">' + escapeHtml(c.note) + '</p><div class="kicker">Style</div><pre class="box" style="min-height:0">' + escapeHtml(c.style) + '</pre><div class="kicker">Exclude</div><pre class="box" style="min-height:0">' + escapeHtml(c.exclude) + '</pre><div class="actions"><button class="primary tiny" type="button" data-combo="' + c.id + '">套用此組合</button><button class="tiny" type="button" data-copy-combo="' + c.id + '">複製兩欄</button></div></div>').join("") +
     "</section>";
 }
