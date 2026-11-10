@@ -79,7 +79,19 @@
   th { color: var(--gold-2); font-weight: 600; font-size: 12px; letter-spacing: .04em; position: sticky; top: 72px; background: var(--paper); }
   td.tag-cell { font-family: var(--mono); color: var(--gold-2); white-space: nowrap; }
   tr:hover td { background: rgba(255,255,255,.02); }
-  .songs { color: var(--muted); }
+  .songs { color: var(--muted); line-height: 1.75; }
+  a.song-link {
+    color: var(--gold-2);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 1px solid transparent;
+  }
+  a.song-link:hover, a.song-link:focus-visible {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+  a.song-link .play { font-size: 0.72em; margin-right: 0.18em; opacity: .85; }
+  .song-sep { color: var(--dim); }
   .why { color: var(--dim); font-size: 12.5px; line-height: 1.55; }
   .ex-tags { color: var(--dawn); font-family: var(--mono); font-size: 12px; }
   .builder { position: sticky; top: 10px; padding: 16px; box-shadow: var(--shadow); }
@@ -116,7 +128,7 @@
   <header class="hero">
     <p class="eyebrow">Suno v6 Custom</p>
     <h1>Suno 提示詞對照選單</h1>
-    <p class="lead">依風格欄七個元素排列，點選即可組成提示詞。每項附英文標籤、中文說明、代表歌曲，以及建議的 Exclude Styles。涵蓋常見方向：韓系 R&amp;B、輕柔氛圍抒情、東方樂器華語抒情，還有夢幻氣聲女聲。歌詞欄的方括號標籤是社群慣例，不是官方語法。</p>
+    <p class="lead">依風格欄七個元素排列，點選即可組成提示詞。每項附英文標籤、中文說明、可點進去聽的代表歌曲，以及建議的 Exclude Styles。涵蓋常見方向：韓系 R&amp;B、輕柔氛圍抒情、東方樂器華語抒情，還有夢幻氣聲女聲。歌詞欄的方括號標籤是社群慣例，不是官方語法。</p>
   </header>
 
   <div class="toolbar">
@@ -170,112 +182,136 @@ const ELEMENTS = [
   { id: "sliders", order: 10, name: "滑桿與模式 Sliders", blurb: "生成前先設滑桿。想完整保留你寫的標籤，把 Variety 調到 0。" }
 ];
 
+function yt(label, id) {
+  return { label: label, url: "https://www.youtube.com/watch?v=" + id };
+}
+
+function songsText(opt) {
+  if (Array.isArray(opt.songs)) {
+    return (opt.songsPrefix || "") + opt.songs.map(s => s.label).join("、") + (opt.songsNote || "");
+  }
+  return opt.songs || "";
+}
+
+function renderSongs(opt) {
+  if (!Array.isArray(opt.songs)) return escapeHtml(opt.songs || "—");
+  if (!opt.songs.length) {
+    const fallback = (opt.songsPrefix || "") + (opt.songsNote || "");
+    return escapeHtml(fallback || "—");
+  }
+  const links = opt.songs.map(s => {
+    if (!s.url) return escapeHtml(s.label);
+    return '<a class="song-link" href="' + escapeHtml(s.url) + '" target="_blank" rel="noopener noreferrer"><span class="play" aria-hidden="true">▶</span>' + escapeHtml(s.label) + "</a>";
+  }).join('<span class="song-sep">、</span>');
+  return escapeHtml(opt.songsPrefix || "") + links + escapeHtml(opt.songsNote || "");
+}
+
 const OPTIONS = [
   // Genre
-  { id: "dream-pop", el: "genre", tag: "Dream pop", zh: "夢幻流行。空氣感合成器鋪底，旋律柔、層次薄而亮，適合夜色與日出前的氛圍。", songs: "Beach House〈Space Song〉", exclude: ["heavy metal","distortion","rap","aggressive drums","EDM drop"], why: "夢幻流行要空氣感與柔和層次，硬金屬、失真與攻擊性鼓組會毀掉鋪底。" },
-  { id: "rnb", el: "genre", tag: "contemporary R&B", zh: "當代 R&B。中板律動、親密人聲，低音溫暖，副歌可以打開但不需電音落下。", songs: "SZA〈Kill Bill〉、The Weeknd〈Die For You〉", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "R&B 靠柔軟人聲與律動，喊唱與硬搖滾會蓋過人聲。" },
-  { id: "kpop", el: "genre", tag: "K-pop", zh: "韓流流行。旋律鉤子清楚，主副歌對比鮮明，和聲與預副歌（pre-chorus）常很完整。", songs: "IU〈Blueming〉", exclude: ["death metal","screaming","heavy distortion","country banjo"], why: "K-Pop 要乾淨旋律與人聲層次，極端重型曲風會把鉤子蓋掉。" },
-  { id: "kpop-dance", el: "genre", tag: "K-pop electro dance", zh: "韓系電音舞曲。節拍明確、合成器亮、副歌衝擊強，偏女團舞曲走向。", songs: "A2O〈NEON〉（2026年11月台灣 Spotify／韓國 Melon 榜熱門）", exclude: ["funeral dirge","acoustic campfire folk","death metal","country banjo"], why: "電音舞曲需要清晰節拍與合成器衝擊，葬禮進行曲或純粹campfire原音會把律動抽走。" },
-  { id: "krnb", el: "genre", tag: "Korean R&B", zh: "韓系 R&B。氣聲或柔聲、夜間城市感，節奏搖擺但不攻擊。", songs: "Crush〈Beautiful〉、Heize〈You, Clouds, Rain〉（비도 오고 그래서）", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "韓系 R&B 靠柔軟人聲與夜間律動，喊唱與硬搖滾會蓋過人聲。" },
-  { id: "mando-ballad", el: "genre", tag: "Mandopop ballad", zh: "華語抒情。中慢板、旋律先行，鋼琴或弦樂托著人聲，情緒比節奏更重要。", songs: "李佳薇〈甲乙丙丁〉（2026年11月 KKBOX 華語榜）、孫燕姿〈我不難過〉", exclude: ["trap hi-hats","EDM drop","heavy metal","rap"], why: "華語抒情以旋律與情緒為主，陷阱鼓與電音落下會把氣氛拉走。" },
-  { id: "oriental", el: "genre", tag: "Oriental pop ballad", zh: "東方樂器流行抒情。古箏、琵琶、二胡與現代人聲、鋼琴並置，留白很重要。", songs: "周杰倫〈青花瓷〉、〈東風破〉", exclude: ["trap hi-hats","EDM drop","heavy metal","808 bass","rap"], why: "東方樂器需要音色空間與留白，重低音與電音會蓋過古箏、琵琶與二胡。" },
-  { id: "indie-pop", el: "genre", tag: "Indie pop", zh: "獨立流行。旋律親民但音色較有個性，常帶夢幻合成器或溫暖吉他。", songs: "The 1975〈About You〉", exclude: ["death metal","screaming","hardstyle","bro-country"], why: "獨立流行偏氣氛與旋律線，極端重型或硬派鄉村會壓過合成器與人聲。" },
-  { id: "art-pop", el: "genre", tag: "Art pop", zh: "藝術流行。編曲與音色選擇較大膽，人聲可以很近、很氣聲，但不走制式舞曲公式。", songs: "Lorde〈Ribs〉", exclude: ["generic EDM drop","bro-country","death metal","party rap"], why: "Art pop 講求獨特音色與層次，制式電音落下會讓它變得普通。" },
-  { id: "uk-soul", el: "genre", tag: "UK soul", zh: "英式靈魂。溫暖中板、復古電鋼琴、人聲親切，像深夜電台。", songs: "Olivia Dean〈Dive〉、Jamie Miller〈Babydoll〉（2026年11月英國 Official Charts）", exclude: ["death metal","screaming","trap 808s","hardstyle","EDM drop"], why: "英式靈魂靠溫暖中板與電鋼琴，重型鼓與電音落下會破壞親密感。" },
-  { id: "soul-pop", el: "genre", tag: "Soul pop", zh: "靈魂流行。比傳統靈魂樂更貼近流行副歌，人聲溫暖，律動從容。", songs: "Olivia Dean〈The Hardest Part〉、Jamie Miller〈Babydoll〉", exclude: ["death metal","screaming","hardstyle","distortion"], why: "靈魂流行要人聲溫度與從容律動，失真與硬派電子會把溫暖抽掉。" },
-  { id: "alt-rnb", el: "genre", tag: "alternative R&B", zh: "另類 R&B。比主流 R&B 更空、更夜，常帶氣聲與低音遊走。", songs: "SZA〈Kill Bill〉、DEAN〈D (Half Moon)〉", exclude: ["heavy metal","punk","screaming","bagpipes"], why: "另類 R&B 要夜間律動與氣聲空間，硬核編制會擠掉低音。" },
-  { id: "jpop", el: "genre", tag: "J-pop", zh: "日本流行。旋律完整、副歌開闊；創作型走向可偏另類流行或流行搖滾。", songs: "Vaundy〈しわあわせ〉、Mrs. GREEN APPLE〈ライラック〉", exclude: ["death metal","trap 808s","bro-country","screaming"], why: "J-Pop 旋律線要清楚，重型嘶吼或陷阱鼓會打斷副歌的開闊感。" },
-  { id: "psych-pop", el: "genre", tag: "psychedelic pop", zh: "迷幻流行。相位感合成器、慵懶律動，音色會漂、會閃。", songs: "Tame Impala〈The Less I Know The Better〉、Tame Impala & JENNIE〈Dracula〉（2026）", exclude: ["death metal","acoustic campfire folk","opera","hardcore rap"], why: "迷幻流行靠相位合成器與慵懶律動，極端曲風或純粹營火原音會把迷幻層拿掉。" },
-  { id: "ambient-ballad", el: "genre", tag: "ambient pop ballad", zh: "氛圍抒情。速度慢、空間大，人聲幾乎貼在耳邊，適合輕柔浪漫的氛圍抒情路線。", songs: "Billie Eilish〈when the party's over〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","EDM drop","screaming","distortion"], why: "氛圍抒情靠留白與近距離人聲，攻擊性鼓組與失真會把空間擠掉。" },
-  { id: "country", el: "genre", tag: "contemporary country", zh: "當代鄉村。敘事清楚、吉他為主、人聲較直。這不是夢幻或韓系抒情的主路線，列在此方便對照與排除。", songs: "Ella Langley〈Choosin' Texas〉（2026年 Billboard Hot 100 長期冠軍）", exclude: ["EDM drop","trap 808s","screaming","robotic autotune"], why: "鄉村樂靠吉他、敘事與真實人聲，電音落下與機器人音高修正會走調。" },
+  { id: "dream-pop", el: "genre", tag: "Dream pop", zh: "夢幻流行。空氣感合成器鋪底，旋律柔、層次薄而亮，適合夜色與日出前的氛圍。", songs: [yt("Beach House〈Space Song〉", "RBtlPT23PTM")], exclude: ["heavy metal","distortion","rap","aggressive drums","EDM drop"], why: "夢幻流行要空氣感與柔和層次，硬金屬、失真與攻擊性鼓組會毀掉鋪底。" },
+  { id: "rnb", el: "genre", tag: "contemporary R&B", zh: "當代 R&B。中板律動、親密人聲，低音溫暖，副歌可以打開但不需電音落下。", songs: [yt("SZA〈Kill Bill〉", "MSRcC626prw"), yt("The Weeknd〈Die For You〉", "RpyN9pFXUCg")], exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "R&B 靠柔軟人聲與律動，喊唱與硬搖滾會蓋過人聲。" },
+  { id: "kpop", el: "genre", tag: "K-pop", zh: "韓流流行。旋律鉤子清楚，主副歌對比鮮明，和聲與預副歌（pre-chorus）常很完整。", songs: [yt("IU〈Blueming〉", "D1PvIWdJ8xo")], exclude: ["death metal","screaming","heavy distortion","country banjo"], why: "K-Pop 要乾淨旋律與人聲層次，極端重型曲風會把鉤子蓋掉。" },
+  { id: "kpop-dance", el: "genre", tag: "K-pop electro dance", zh: "韓系電音舞曲。節拍明確、合成器亮、副歌衝擊強，偏女團舞曲走向。", songs: [yt("A2O LITE〈NEON〉", "D968qfUZMUE")], songsNote: "（2026年11月台灣 Spotify／韓國 Melon 榜熱門）", exclude: ["funeral dirge","acoustic campfire folk","death metal","country banjo"], why: "電音舞曲需要清晰節拍與合成器衝擊，葬禮進行曲或純粹campfire原音會把律動抽走。" },
+  { id: "krnb", el: "genre", tag: "Korean R&B", zh: "韓系 R&B。氣聲或柔聲、夜間城市感，節奏搖擺但不攻擊。", songs: [yt("Crush〈Beautiful〉", "W0cs6ciCt_k"), yt("Heize〈You, Clouds, Rain〉（비도 오고 그래서）", "afxLaQiLu-o")], exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "韓系 R&B 靠柔軟人聲與夜間律動，喊唱與硬搖滾會蓋過人聲。" },
+  { id: "mando-ballad", el: "genre", tag: "Mandopop ballad", zh: "華語抒情。中慢板、旋律先行，鋼琴或弦樂托著人聲，情緒比節奏更重要。", songs: [yt("李佳薇〈甲乙丙丁〉（2026年11月 KKBOX 華語榜）", "YacpC7sUXMM"), yt("孫燕姿〈我不難過〉", "GDsyUtdS1YM")], exclude: ["trap hi-hats","EDM drop","heavy metal","rap"], why: "華語抒情以旋律與情緒為主，陷阱鼓與電音落下會把氣氛拉走。" },
+  { id: "oriental", el: "genre", tag: "Oriental pop ballad", zh: "東方樂器流行抒情。古箏、琵琶、二胡與現代人聲、鋼琴並置，留白很重要。", songs: [yt("周杰倫〈青花瓷〉", "Z8Mqw0b9ADs"), yt("周杰倫〈東風破〉", "qct0JLjaHDc")], exclude: ["trap hi-hats","EDM drop","heavy metal","808 bass","rap"], why: "東方樂器需要音色空間與留白，重低音與電音會蓋過古箏、琵琶與二胡。" },
+  { id: "indie-pop", el: "genre", tag: "Indie pop", zh: "獨立流行。旋律親民但音色較有個性，常帶夢幻合成器或溫暖吉他。", songs: [yt("The 1975〈About You〉", "tGv7CUutzqU")], exclude: ["death metal","screaming","hardstyle","bro-country"], why: "獨立流行偏氣氛與旋律線，極端重型或硬派鄉村會壓過合成器與人聲。" },
+  { id: "art-pop", el: "genre", tag: "Art pop", zh: "藝術流行。編曲與音色選擇較大膽，人聲可以很近、很氣聲，但不走制式舞曲公式。", songs: [yt("Lorde〈Ribs〉", "b7pE8AG1jjE")], exclude: ["generic EDM drop","bro-country","death metal","party rap"], why: "Art pop 講求獨特音色與層次，制式電音落下會讓它變得普通。" },
+  { id: "uk-soul", el: "genre", tag: "UK soul", zh: "英式靈魂。溫暖中板、復古電鋼琴、人聲親切，像深夜電台。", songs: [yt("Olivia Dean〈Dive〉", "NM4e606yFJg"), yt("Jamie Miller〈Babydoll〉（2026年11月英國 Official Charts）", "LkJ_b_YYUnE")], exclude: ["death metal","screaming","trap 808s","hardstyle","EDM drop"], why: "英式靈魂靠溫暖中板與電鋼琴，重型鼓與電音落下會破壞親密感。" },
+  { id: "soul-pop", el: "genre", tag: "Soul pop", zh: "靈魂流行。比傳統靈魂樂更貼近流行副歌，人聲溫暖，律動從容。", songs: [yt("Olivia Dean〈The Hardest Part〉", "ZC6MTqIGoQg"), yt("Jamie Miller〈Babydoll〉", "LkJ_b_YYUnE")], exclude: ["death metal","screaming","hardstyle","distortion"], why: "靈魂流行要人聲溫度與從容律動，失真與硬派電子會把溫暖抽掉。" },
+  { id: "alt-rnb", el: "genre", tag: "alternative R&B", zh: "另類 R&B。比主流 R&B 更空、更夜，常帶氣聲與低音遊走。", songs: [yt("SZA〈Kill Bill〉", "MSRcC626prw"), yt("DEAN〈D (Half Moon)〉", "eelfrHtmk68")], exclude: ["heavy metal","punk","screaming","bagpipes"], why: "另類 R&B 要夜間律動與氣聲空間，硬核編制會擠掉低音。" },
+  { id: "jpop", el: "genre", tag: "J-pop", zh: "日本流行。旋律完整、副歌開闊；創作型走向可偏另類流行或流行搖滾。", songs: [yt("Vaundy〈しわあわせ〉", "JwmGruvGt_I"), yt("Mrs. GREEN APPLE〈ライラック〉", "QjrkrVmC-8M")], exclude: ["death metal","trap 808s","bro-country","screaming"], why: "J-Pop 旋律線要清楚，重型嘶吼或陷阱鼓會打斷副歌的開闊感。" },
+  { id: "psych-pop", el: "genre", tag: "psychedelic pop", zh: "迷幻流行。相位感合成器、慵懶律動，音色會漂、會閃。", songs: [yt("Tame Impala〈The Less I Know The Better〉", "sBzrzS1Ag_g"), yt("Tame Impala & JENNIE〈Dracula〉（2026）", "0UPDBODtxzw")], exclude: ["death metal","acoustic campfire folk","opera","hardcore rap"], why: "迷幻流行靠相位合成器與慵懶律動，極端曲風或純粹營火原音會把迷幻層拿掉。" },
+  { id: "ambient-ballad", el: "genre", tag: "ambient pop ballad", zh: "氛圍抒情。速度慢、空間大，人聲幾乎貼在耳邊，適合輕柔浪漫的氛圍抒情路線。", songs: [yt("Billie Eilish〈when the party's over〉", "pbMwTqkKSps"), yt("Lana Del Rey〈Video Games〉", "cE6wxDqdOV0")], exclude: ["aggressive drums","EDM drop","screaming","distortion"], why: "氛圍抒情靠留白與近距離人聲，攻擊性鼓組與失真會把空間擠掉。" },
+  { id: "country", el: "genre", tag: "contemporary country", zh: "當代鄉村。敘事清楚、吉他為主、人聲較直。這不是夢幻或韓系抒情的主路線，列在此方便對照與排除。", songs: [yt("Ella Langley〈Choosin' Texas〉（2026年 Billboard Hot 100 長期冠軍）", "nUsrYVxrDwI")], exclude: ["EDM drop","trap 808s","screaming","robotic autotune"], why: "鄉村樂靠吉他、敘事與真實人聲，電音落下與機器人音高修正會走調。" },
 
   // Mood
-  { id: "nostalgic", el: "mood", tag: "nostalgic", zh: "懷舊。像想起舊照片或舊街道，溫暖但帶一點距離。", songs: "孫燕姿〈開始懂了〉、The 1975〈About You〉", exclude: ["festival drop","chipmunk vocals"], why: "懷舊需要時間感與餘韻，節慶落下或花栗鼠音高會把回憶感冲淡。" },
-  { id: "hopeful", el: "mood", tag: "hopeful", zh: "懷抱希望。可以從低處慢慢打開，而不是一開始就很亮。", songs: "梁靜茹〈勇氣〉、Coldplay〈Fix You〉", exclude: ["funeral dirge","screamed vocals","gloomy drone"], why: "希望感應該能抬升，葬禮進行曲或全程陰暗持續低音會把它壓住。" },
-  { id: "intimate", el: "mood", tag: "intimate", zh: "親密。像對一個人近距離說話，適合氣聲與近麥克風。", songs: "Billie Eilish〈i love you〉、Olivia Dean〈Dive〉", exclude: ["aggressive drums","stadium crowd","screaming"], why: "親密感應該靠近、收著，場館人聲與攻擊性鼓會把距離拉遠。" },
-  { id: "melancholic", el: "mood", tag: "melancholic", zh: "憂鬱但不絕望，旋律帶一點下沉。", songs: "Adele〈Someone Like You〉、林俊傑〈可惜沒如果〉", exclude: ["party horns","festival drop","chipmunk vocals"], why: "憂鬱需要克制，派對喇叭與花栗鼠音效會把情緒打斷。" },
-  { id: "cinematic", el: "mood", tag: "cinematic", zh: "電影感。空間大、畫面清楚，常用弦樂或寬混響托住。", songs: "Billie Eilish〈No Time To Die〉、周深〈化身孤島的鯨〉", exclude: ["lo-fi hiss","joke vocals","tinny demo sound"], why: "電影感要完整的空間與層次，玩笑人聲或錫薄小樣音質會破功。" },
-  { id: "night-drive", el: "mood", tag: "night-drive mood", zh: "夜間開車。合成器流動、低音穩定，像城市燈火從窗邊擦過。", songs: "The Weeknd〈Blinding Lights〉", exclude: ["acoustic campfire","polka","opera"], why: "夜車氣氛靠流動合成器與穩定低音，營火原音或歌劇會換到另一個場景。" },
-  { id: "tender", el: "mood", tag: "tender", zh: "溫柔。力道收住，不催、不吼，適合安撫式主歌。", songs: "Sam Smith〈Stay With Me〉、Olivia Dean〈The Hardest Part〉", exclude: ["heavy metal","distortion","hardstyle"], why: "溫柔要收力，失真與硬派電子會把語氣推得太兇。" },
-  { id: "dreamy", el: "mood", tag: "dreamy", zh: "夢幻、飄。殘響可以長一點，邊緣不必太銳。", songs: "Beach House〈Space Song〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","distortion","harsh clipping"], why: "夢幻靠柔邊與殘響，刺耳削波與攻擊性鼓會把霧氣驅散。" },
-  { id: "romantic", el: "mood", tag: "romantic", zh: "浪漫。可以甜，但最好有真實的溫度，而不是空泛的漂亮。", songs: "Crush〈Beautiful〉、周杰倫〈晴天〉", exclude: ["screaming","horror drones","death metal"], why: "浪漫需要溫度與旋律，驚悚持續低音與嘶吼會把感情線拉斷。" },
-  { id: "late-night", el: "mood", tag: "late-night city lights", zh: "深夜城市燈火。比 night-drive 更慢、更近，像收工後的街道。", songs: "Heize〈You, Clouds, Rain〉、The Weeknd〈Die For You〉", exclude: ["morning kids choir","festival drop","military snare"], why: "深夜城市要低螢幕亮度的感覺，兒童合唱或軍鼓會把時段走鐘。" },
-  { id: "dawn", el: "mood", tag: "dawn atmosphere", zh: "黎明、日出前。光是慢慢亮的，不是正午的大太陽。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones","aggressive drums"], why: "黎明要緩慢變亮，夜店熱曲或驚悚低音會把天亮的過程打斷。" },
-  { id: "night-rain", el: "mood", tag: "night rain atmosphere", zh: "夜雨。潮濕、安靜，音符之間要留得住水氣。", songs: "Heize〈You, Clouds, Rain〉、楊丞琳〈雨愛〉", exclude: ["dry stadium mix","party horns","hardstyle"], why: "夜雨需要潮濕空間感，乾燥場館混音與派對喇叭會把雨氣蒸乾。" },
+  { id: "nostalgic", el: "mood", tag: "nostalgic", zh: "懷舊。像想起舊照片或舊街道，溫暖但帶一點距離。", songs: [yt("孫燕姿〈開始懂了〉", "h5eRbbOnPRc"), yt("The 1975〈About You〉", "tGv7CUutzqU")], exclude: ["festival drop","chipmunk vocals"], why: "懷舊需要時間感與餘韻，節慶落下或花栗鼠音高會把回憶感冲淡。" },
+  { id: "hopeful", el: "mood", tag: "hopeful", zh: "懷抱希望。可以從低處慢慢打開，而不是一開始就很亮。", songs: [yt("梁靜茹〈勇氣〉", "nDchQNPuA0k"), yt("Coldplay〈Fix You〉", "k4V3Mo61fJM")], exclude: ["funeral dirge","screamed vocals","gloomy drone"], why: "希望感應該能抬升，葬禮進行曲或全程陰暗持續低音會把它壓住。" },
+  { id: "intimate", el: "mood", tag: "intimate", zh: "親密。像對一個人近距離說話，適合氣聲與近麥克風。", songs: [yt("Billie Eilish〈i love you〉", "WiinVuzh4DA"), yt("Olivia Dean〈Dive〉", "NM4e606yFJg")], exclude: ["aggressive drums","stadium crowd","screaming"], why: "親密感應該靠近、收著，場館人聲與攻擊性鼓會把距離拉遠。" },
+  { id: "melancholic", el: "mood", tag: "melancholic", zh: "憂鬱但不絕望，旋律帶一點下沉。", songs: [yt("Adele〈Someone Like You〉", "hLQl3WQQoQ0"), yt("林俊傑〈可惜沒如果〉", "vsBf_0gDxSM")], exclude: ["party horns","festival drop","chipmunk vocals"], why: "憂鬱需要克制，派對喇叭與花栗鼠音效會把情緒打斷。" },
+  { id: "cinematic", el: "mood", tag: "cinematic", zh: "電影感。空間大、畫面清楚，常用弦樂或寬混響托住。", songs: [yt("Billie Eilish〈No Time To Die〉", "BboMpayJomw"), yt("周深〈化身孤島的鯨〉", "ALuJdb96_Fs")], exclude: ["lo-fi hiss","joke vocals","tinny demo sound"], why: "電影感要完整的空間與層次，玩笑人聲或錫薄小樣音質會破功。" },
+  { id: "night-drive", el: "mood", tag: "night-drive mood", zh: "夜間開車。合成器流動、低音穩定，像城市燈火從窗邊擦過。", songs: [yt("The Weeknd〈Blinding Lights〉", "4NRXx6U8ABQ")], exclude: ["acoustic campfire","polka","opera"], why: "夜車氣氛靠流動合成器與穩定低音，營火原音或歌劇會換到另一個場景。" },
+  { id: "tender", el: "mood", tag: "tender", zh: "溫柔。力道收住，不催、不吼，適合安撫式主歌。", songs: [yt("Sam Smith〈Stay With Me〉", "pB-5XG-DbAA"), yt("Olivia Dean〈The Hardest Part〉", "ZC6MTqIGoQg")], exclude: ["heavy metal","distortion","hardstyle"], why: "溫柔要收力，失真與硬派電子會把語氣推得太兇。" },
+  { id: "dreamy", el: "mood", tag: "dreamy", zh: "夢幻、飄。殘響可以長一點，邊緣不必太銳。", songs: [yt("Beach House〈Space Song〉", "RBtlPT23PTM"), yt("Lana Del Rey〈Video Games〉", "cE6wxDqdOV0")], exclude: ["aggressive drums","distortion","harsh clipping"], why: "夢幻靠柔邊與殘響，刺耳削波與攻擊性鼓會把霧氣驅散。" },
+  { id: "romantic", el: "mood", tag: "romantic", zh: "浪漫。可以甜，但最好有真實的溫度，而不是空泛的漂亮。", songs: [yt("Crush〈Beautiful〉", "W0cs6ciCt_k"), yt("周杰倫〈晴天〉", "DYptgVvkVLQ")], exclude: ["screaming","horror drones","death metal"], why: "浪漫需要溫度與旋律，驚悚持續低音與嘶吼會把感情線拉斷。" },
+  { id: "late-night", el: "mood", tag: "late-night city lights", zh: "深夜城市燈火。比 night-drive 更慢、更近，像收工後的街道。", songs: [yt("Heize〈You, Clouds, Rain〉", "afxLaQiLu-o"), yt("The Weeknd〈Die For You〉", "RpyN9pFXUCg")], exclude: ["morning kids choir","festival drop","military snare"], why: "深夜城市要低螢幕亮度的感覺，兒童合唱或軍鼓會把時段走鐘。" },
+  { id: "dawn", el: "mood", tag: "dawn atmosphere", zh: "黎明、日出前。光是慢慢亮的，不是正午的大太陽。", songs: [yt("Norah Jones〈Sunrise〉", "fd02pGJx0s0")], exclude: ["nightclub banger","horror drones","aggressive drums"], why: "黎明要緩慢變亮，夜店熱曲或驚悚低音會把天亮的過程打斷。" },
+  { id: "night-rain", el: "mood", tag: "night rain atmosphere", zh: "夜雨。潮濕、安靜，音符之間要留得住水氣。", songs: [yt("Heize〈You, Clouds, Rain〉", "afxLaQiLu-o"), yt("楊丞琳〈雨愛〉", "oec9R5ypf-o")], exclude: ["dry stadium mix","party horns","hardstyle"], why: "夜雨需要潮濕空間感，乾燥場館混音與派對喇叭會把雨氣蒸乾。" },
 
   // Tempo
-  { id: "tempo-72", el: "tempo", tag: "slow tempo around 72 BPM", zh: "慢板抒情。適合氣聲、鋼琴與留白。BPM 是大約值。", songs: "Adele〈Easy On Me〉（約 73 BPM）、Bruno Mars〈When I Was Your Man〉（約 73 BPM）", exclude: ["hardstyle kick","speed rap"], why: "慢板要呼吸空間，硬派踢鼓與快速說唱會把速度往上扯。" },
-  { id: "tempo-80", el: "tempo", tag: "slow ballad around 80 BPM", zh: "略快於極慢抒情，仍以人聲與和弦推動。", songs: "Billie Eilish〈when the party's over〉（約 83 BPM）", exclude: ["EDM drop","double-time hats"], why: "慢抒情不需要雙倍速踩鑔或電音落下。" },
-  { id: "tempo-90", el: "tempo", tag: "mid-tempo around 90 BPM", zh: "中慢板。R&B 與夢幻流行都很常用，身體會輕輕擺，但不必跳舞。", songs: "SZA〈Kill Bill〉（約 89 BPM）", exclude: ["hardstyle kick","drill hats"], why: "中慢板 R&B 的擺動會被硬派踢鼓或 drill 踩鑔打斷。" },
-  { id: "tempo-95", el: "tempo", tag: "mid-tempo around 95 BPM", zh: "經典中板。主歌可以收，副歌有空間往上推。", songs: "適合韓系 R&B 與夢幻流行的中板慣性速度（BPM 為約值）", exclude: ["funeral dirge","hardstyle kick"], why: "中板要能走路也能唱歌，葬禮速度或硬派踢鼓都會走偏。" },
-  { id: "tempo-100", el: "tempo", tag: "around 100 BPM, laid-back groove", zh: "從容的中板律動，英式靈魂、柔派 R&B 常用。", songs: "Beyoncé〈Crazy in Love〉（約 100 BPM，律動更亮；柔派可把力道收住）", exclude: ["breakbeat rush","speed rap"], why: "從容律動怕被加速碎拍或快速說唱帶走。" },
-  { id: "tempo-115", el: "tempo", tag: "around 115 BPM", zh: "偏俏的中快板，律動更明顯，仍可保留人聲溫度。", songs: "Mark Ronson, Bruno Mars〈Uptown Funk〉（約 115 BPM）", exclude: ["funeral dirge","drone ambient only"], why: "這個速度需要身體感，純持續低音或葬禮速度會把它拖住。" },
-  { id: "tempo-124", el: "tempo", tag: "dance groove around 124 BPM", zh: "舞曲中板。適合電音舞曲與女團舞曲；抒情主線通常較慢。", songs: "Dua Lipa〈Don't Start Now〉（約 124 BPM）", exclude: ["rubato free time","funeral dirge"], why: "舞曲律動需要穩定節拍，自由速度會讓鼓組站不穩。" },
-  { id: "tempo-170", el: "tempo", tag: "uptempo around 170 BPM", zh: "快板或帶半拍感的夜車流行。不一定要聽起來像拼命趕路。", songs: "The Weeknd〈Blinding Lights〉（約 171 BPM）", exclude: ["sluggish dirge","lo-fi tape drag"], why: "快板夜車流行需要向前推的脈衝，拖拍或葬禮速度會把它踩煞車。" },
-  { id: "half-time", el: "tempo", tag: "half-time feel", zh: "半拍感。表面可以較慢、鼓點落在大格上，適合 R&B 與另類流行。", songs: "常見於當代 R&B 副歌的重量感處理", exclude: ["constant sixteenth hats"], why: "半拍感靠疏落的重拍，連續十六分音踩鑔會把它填滿。" },
+  { id: "tempo-72", el: "tempo", tag: "slow tempo around 72 BPM", zh: "慢板抒情。適合氣聲、鋼琴與留白。BPM 是大約值。", songs: [yt("Adele〈Easy On Me〉（約 73 BPM）", "U3ASj1L6_sY"), yt("Bruno Mars〈When I Was Your Man〉（約 73 BPM）", "ekzHIouo8Q4")], exclude: ["hardstyle kick","speed rap"], why: "慢板要呼吸空間，硬派踢鼓與快速說唱會把速度往上扯。" },
+  { id: "tempo-80", el: "tempo", tag: "slow ballad around 80 BPM", zh: "略快於極慢抒情，仍以人聲與和弦推動。", songs: [yt("Billie Eilish〈when the party's over〉（約 83 BPM）", "pbMwTqkKSps")], exclude: ["EDM drop","double-time hats"], why: "慢抒情不需要雙倍速踩鑔或電音落下。" },
+  { id: "tempo-90", el: "tempo", tag: "mid-tempo around 90 BPM", zh: "中慢板。R&B 與夢幻流行都很常用，身體會輕輕擺，但不必跳舞。", songs: [yt("SZA〈Kill Bill〉（約 89 BPM）", "MSRcC626prw")], exclude: ["hardstyle kick","drill hats"], why: "中慢板 R&B 的擺動會被硬派踢鼓或 drill 踩鑔打斷。" },
+  { id: "tempo-95", el: "tempo", tag: "mid-tempo around 95 BPM", zh: "經典中板。主歌可以收，副歌有空間往上推。", songs: [], songsNote: "適合韓系 R&B 與夢幻流行的中板慣性速度（BPM 為約值）", exclude: ["funeral dirge","hardstyle kick"], why: "中板要能走路也能唱歌，葬禮速度或硬派踢鼓都會走偏。" },
+  { id: "tempo-100", el: "tempo", tag: "around 100 BPM, laid-back groove", zh: "從容的中板律動，英式靈魂、柔派 R&B 常用。", songs: [yt("Beyoncé〈Crazy in Love〉（約 100 BPM，律動更亮；柔派可把力道收住）", "ViwtNLUqkMY")], exclude: ["breakbeat rush","speed rap"], why: "從容律動怕被加速碎拍或快速說唱帶走。" },
+  { id: "tempo-115", el: "tempo", tag: "around 115 BPM", zh: "偏俏的中快板，律動更明顯，仍可保留人聲溫度。", songs: [yt("Mark Ronson, Bruno Mars〈Uptown Funk〉（約 115 BPM）", "OPf0YbXqDm0")], exclude: ["funeral dirge","drone ambient only"], why: "這個速度需要身體感，純持續低音或葬禮速度會把它拖住。" },
+  { id: "tempo-124", el: "tempo", tag: "dance groove around 124 BPM", zh: "舞曲中板。適合電音舞曲與女團舞曲；抒情主線通常較慢。", songs: [yt("Dua Lipa〈Don't Start Now〉（約 124 BPM）", "oygrmJFKYZY")], exclude: ["rubato free time","funeral dirge"], why: "舞曲律動需要穩定節拍，自由速度會讓鼓組站不穩。" },
+  { id: "tempo-170", el: "tempo", tag: "uptempo around 170 BPM", zh: "快板或帶半拍感的夜車流行。不一定要聽起來像拼命趕路。", songs: [yt("The Weeknd〈Blinding Lights〉（約 171 BPM）", "4NRXx6U8ABQ")], exclude: ["sluggish dirge","lo-fi tape drag"], why: "快板夜車流行需要向前推的脈衝，拖拍或葬禮速度會把它踩煞車。" },
+  { id: "half-time", el: "tempo", tag: "half-time feel", zh: "半拍感。表面可以較慢、鼓點落在大格上，適合 R&B 與另類流行。", songs: [], songsNote: "常見於當代 R&B 副歌的重量感處理", exclude: ["constant sixteenth hats"], why: "半拍感靠疏落的重拍，連續十六分音踩鑔會把它填滿。" },
 
   // Instruments
-  { id: "piano", el: "instruments", tag: "soft piano lead", zh: "柔和鋼琴主奏，帶和弦與簡單過門，讓人聲走在前面。", songs: "Adele〈Easy On Me〉、林俊傑〈修煉愛情〉", exclude: ["heavy metal guitar","distortion"], why: "柔鋼琴要清、要有空間，失真吉他會蓋過鍵盤的細節。" },
-  { id: "guzheng", el: "instruments", tag: "guzheng countermelody", zh: "古箏作對位旋律，不要當背景音效掃過就算了。", songs: "周杰倫〈蘭亭序〉、〈青花瓷〉（中國風編曲對照）", exclude: ["trap hi-hats","808 bass","EDM drop"], why: "古箏的余音需要空間，陷阱鼓與 808 會蓋過撥弦。" },
-  { id: "erhu", el: "instruments", tag: "erhu countermelody", zh: "二胡對位。適合在主歌尾或副歌加一句回應人聲。", songs: "周杰倫〈東風破〉、〈千里之外〉", exclude: ["trap hi-hats","EDM drop","heavy metal"], why: "二胡是接近人聲的旋律樂器，重型編制會把它淹没。" },
-  { id: "pipa", el: "instruments", tag: "pipa lead", zh: "琵琶主奏或引子。顆粒清楚，可與現代人聲對照。", songs: "周杰倫〈青花瓷〉", exclude: ["distortion","trap 808s","aggressive drums"], why: "琵琶的顆粒與滾奏怕被失真和重鼓蓋掉。" },
-  { id: "pads", el: "instruments", tag: "airy synth pads underneath", zh: "空氣感合成器鋪在底下，不要搶主旋律。", songs: "Beach House〈Space Song〉、The 1975〈About You〉", exclude: ["distortion","harsh saw leads"], why: "鋪底要薄而亮，刺耳鋸齒主奏會把霧氣撕開。" },
-  { id: "analog-bass", el: "instruments", tag: "warm analog bass", zh: "溫暖類比低音，圓、穩，托住律動而不轟頭。", songs: "Daft Punk〈Get Lucky〉、The Weeknd〈Blinding Lights〉", exclude: ["distortion bass grind","metal guitar chugs"], why: "溫暖低音要圓，碾磨失真低音與金屬悶音會把它撕破。" },
-  { id: "rhodes", el: "instruments", tag: "vintage electric piano", zh: "復古電鋼琴（Rhodes 類音色），英式靈魂與深夜 R&B 的核心觸感。", songs: "Olivia Dean〈Dive〉、Norah Jones〈Don't Know Why〉", exclude: ["EDM supersaw","heavy metal"], why: "復古電鋼琴的顫音與溫度會被大鋸齒合成器蓋掉。" },
-  { id: "brushed", el: "instruments", tag: "brushed drums", zh: "束棒鼓，沙沙的、輕的，適合親密中板。", songs: "Norah Jones〈Don't Know Why〉", exclude: ["aggressive drums","trap hi-hats","hardstyle kick"], why: "束棒鼓的細碎質地最怕被攻擊性鼓組或硬派踢鼓取代。" },
-  { id: "strings", el: "instruments", tag: "sparse strings", zh: "稀疏弦樂。一兩條線就夠，不要做成整隊交響轟炸。", songs: "Adele〈Someone Like You〉、周深〈化身孤島的鯨〉", exclude: ["film trailer brass hits","EDM drop"], why: "稀疏弦樂靠克制，預告片銅管重擊會把細線打斷。" },
-  { id: "acoustic", el: "instruments", tag: "acoustic guitar", zh: "木吉他。可作指彈過門或輕掃和弦，適合柔抒情。", songs: "陳綺貞〈旅行的意義〉、Ed Sheeran〈Perfect〉", exclude: ["distortion","metal guitar","EDM drop"], why: "木吉他的身體共鳴怕被失真與電音落下蓋掉。" },
-  { id: "arp", el: "instruments", tag: "analog synth arpeggio", zh: "類比合成器分解和弦，適合迷幻或夜車氣氛，當裝飾而非全程主導。", songs: "Tame Impala〈The Less I Know The Better〉", exclude: ["acoustic campfire folk","opera choir"], why: "琶音合成器的迷幻循環會被營火民謠或歌劇合唱換走場景。" },
+  { id: "piano", el: "instruments", tag: "soft piano lead", zh: "柔和鋼琴主奏，帶和弦與簡單過門，讓人聲走在前面。", songs: [yt("Adele〈Easy On Me〉", "U3ASj1L6_sY"), yt("林俊傑〈修煉愛情〉", "LWV-f6dMN3Q")], exclude: ["heavy metal guitar","distortion"], why: "柔鋼琴要清、要有空間，失真吉他會蓋過鍵盤的細節。" },
+  { id: "guzheng", el: "instruments", tag: "guzheng countermelody", zh: "古箏作對位旋律，不要當背景音效掃過就算了。", songs: [yt("周杰倫〈蘭亭序〉", "s5Xl5MXboas"), yt("周杰倫〈青花瓷〉", "Z8Mqw0b9ADs")], songsNote: "（中國風編曲對照）", exclude: ["trap hi-hats","808 bass","EDM drop"], why: "古箏的余音需要空間，陷阱鼓與 808 會蓋過撥弦。" },
+  { id: "erhu", el: "instruments", tag: "erhu countermelody", zh: "二胡對位。適合在主歌尾或副歌加一句回應人聲。", songs: [yt("周杰倫〈東風破〉", "qct0JLjaHDc"), yt("周杰倫〈千里之外〉", "ocDo3ySyHSI")], exclude: ["trap hi-hats","EDM drop","heavy metal"], why: "二胡是接近人聲的旋律樂器，重型編制會把它淹没。" },
+  { id: "pipa", el: "instruments", tag: "pipa lead", zh: "琵琶主奏或引子。顆粒清楚，可與現代人聲對照。", songs: [yt("周杰倫〈青花瓷〉", "Z8Mqw0b9ADs")], exclude: ["distortion","trap 808s","aggressive drums"], why: "琵琶的顆粒與滾奏怕被失真和重鼓蓋掉。" },
+  { id: "pads", el: "instruments", tag: "airy synth pads underneath", zh: "空氣感合成器鋪在底下，不要搶主旋律。", songs: [yt("Beach House〈Space Song〉", "RBtlPT23PTM"), yt("The 1975〈About You〉", "tGv7CUutzqU")], exclude: ["distortion","harsh saw leads"], why: "鋪底要薄而亮，刺耳鋸齒主奏會把霧氣撕開。" },
+  { id: "analog-bass", el: "instruments", tag: "warm analog bass", zh: "溫暖類比低音，圓、穩，托住律動而不轟頭。", songs: [yt("Daft Punk〈Get Lucky〉", "5NV6Rdv1a3I"), yt("The Weeknd〈Blinding Lights〉", "4NRXx6U8ABQ")], exclude: ["distortion bass grind","metal guitar chugs"], why: "溫暖低音要圓，碾磨失真低音與金屬悶音會把它撕破。" },
+  { id: "rhodes", el: "instruments", tag: "vintage electric piano", zh: "復古電鋼琴（Rhodes 類音色），英式靈魂與深夜 R&B 的核心觸感。", songs: [yt("Olivia Dean〈Dive〉", "NM4e606yFJg"), yt("Norah Jones〈Don't Know Why〉", "tO4dxvguQDk")], exclude: ["EDM supersaw","heavy metal"], why: "復古電鋼琴的顫音與溫度會被大鋸齒合成器蓋掉。" },
+  { id: "brushed", el: "instruments", tag: "brushed drums", zh: "束棒鼓，沙沙的、輕的，適合親密中板。", songs: [yt("Norah Jones〈Don't Know Why〉", "tO4dxvguQDk")], exclude: ["aggressive drums","trap hi-hats","hardstyle kick"], why: "束棒鼓的細碎質地最怕被攻擊性鼓組或硬派踢鼓取代。" },
+  { id: "strings", el: "instruments", tag: "sparse strings", zh: "稀疏弦樂。一兩條線就夠，不要做成整隊交響轟炸。", songs: [yt("Adele〈Someone Like You〉", "hLQl3WQQoQ0"), yt("周深〈化身孤島的鯨〉", "ALuJdb96_Fs")], exclude: ["film trailer brass hits","EDM drop"], why: "稀疏弦樂靠克制，預告片銅管重擊會把細線打斷。" },
+  { id: "acoustic", el: "instruments", tag: "acoustic guitar", zh: "木吉他。可作指彈過門或輕掃和弦，適合柔抒情。", songs: [yt("陳綺貞〈旅行的意義〉", "0ZUo_HhB564"), yt("Ed Sheeran〈Perfect〉", "2Vv-BfVoq4g")], exclude: ["distortion","metal guitar","EDM drop"], why: "木吉他的身體共鳴怕被失真與電音落下蓋掉。" },
+  { id: "arp", el: "instruments", tag: "analog synth arpeggio", zh: "類比合成器分解和弦，適合迷幻或夜車氣氛，當裝飾而非全程主導。", songs: [yt("Tame Impala〈The Less I Know The Better〉", "sBzrzS1Ag_g")], exclude: ["acoustic campfire folk","opera choir"], why: "琶音合成器的迷幻循環會被營火民謠或歌劇合唱換走場景。" },
 
   // Vocals
-  { id: "breathy", el: "vocals", tag: "breathy female vocal", zh: "氣聲女聲。氣比力多，靠近麥克風，常是夢幻或氛圍抒情的核心聲線。", songs: "Billie Eilish〈ocean eyes〉、王菲〈傳奇〉", exclude: ["male vocal","rap","screaming","autotune"], why: "氣聲女聲要保留呼吸與口形，男聲、說唱、嘶吼或重自動調音會換掉這條聲線。" },
-  { id: "close-mic", el: "vocals", tag: "close-mic, intimate", zh: "近麥克風、親密。能聽到氣口與唇齒，空間感不要太大。", songs: "Billie Eilish〈when the party's over〉、Norah Jones〈Don't Know Why〉", exclude: ["stadium reverb","screaming","male vocal"], why: "近講怕大空間殘響和遠距離喊唱，會把嘴唇前的距離拉開。" },
-  { id: "stacked", el: "vocals", tag: "stacked harmonies in chorus", zh: "副歌疊和聲。主歌可以單聲，副歌再打開層次。", songs: "Ariana Grande〈God is a woman〉、ABBA〈Dancing Queen〉", exclude: ["monotone chant","screaming"], why: "疊和聲要音準與層次，單調念白或嘶吼會把和聲牆拆掉。" },
-  { id: "soft-female", el: "vocals", tag: "soft female vocal", zh: "柔軟女聲。不必全程氣聲，但力道仍收著，咬字清楚。", songs: "Olivia Dean〈The Hardest Part〉、IU〈밤편지 / Through the Night〉", exclude: ["male vocal","screaming","rap"], why: "柔女聲與男聲主唱、嘶吼或說唱段落容易互相搶主導權。" },
-  { id: "airy-whisper", el: "vocals", tag: "airy whisper lead", zh: "氣音耳語主唱。只建議用在主歌或橋段，副歌仍可稍微打開。", songs: "Billie Eilish〈ocean eyes〉、王菲〈天空〉", exclude: ["belting throughout","screaming","autotune"], why: "耳語主唱怕整首吼唱或重自動調音，氣音細節會消失。" },
-  { id: "belting", el: "vocals", tag: "powerful belting chorus", zh: "副歌開放聲。主歌仍可氣聲，到副歌再把聲音打開。李佳薇路線。", songs: "李佳薇〈甲乙丙丁〉、Adele〈Rolling in the Deep〉、張惠妹〈聽海〉", exclude: ["whisper only throughout","muffled lo-fi vocal"], why: "副歌開放聲需要清晰的中高頻，全程耳語或悶濁 lo-fi 人聲會讓它使不上力。" },
-  { id: "falsetto", el: "vocals", tag: "layered falsetto", zh: "疊層假音。可用在副歌尾或和聲裡，增加夜色。", songs: "The Weeknd〈Die For You〉、Crush〈Beautiful〉", exclude: ["screaming","talk-rap verses"], why: "假音層要純、要亮，嘶吼或談話式說唱會把那層撕掉。" },
+  { id: "breathy", el: "vocals", tag: "breathy female vocal", zh: "氣聲女聲。氣比力多，靠近麥克風，常是夢幻或氛圍抒情的核心聲線。", songs: [yt("Billie Eilish〈ocean eyes〉", "viimfQi_pUw"), yt("王菲〈傳奇〉", "xD5tBzfa-VA")], exclude: ["male vocal","rap","screaming","autotune"], why: "氣聲女聲要保留呼吸與口形，男聲、說唱、嘶吼或重自動調音會換掉這條聲線。" },
+  { id: "close-mic", el: "vocals", tag: "close-mic, intimate", zh: "近麥克風、親密。能聽到氣口與唇齒，空間感不要太大。", songs: [yt("Billie Eilish〈when the party's over〉", "pbMwTqkKSps"), yt("Norah Jones〈Don't Know Why〉", "tO4dxvguQDk")], exclude: ["stadium reverb","screaming","male vocal"], why: "近講怕大空間殘響和遠距離喊唱，會把嘴唇前的距離拉開。" },
+  { id: "stacked", el: "vocals", tag: "stacked harmonies in chorus", zh: "副歌疊和聲。主歌可以單聲，副歌再打開層次。", songs: [yt("Ariana Grande〈God is a woman〉", "kHLHSlExFis"), yt("ABBA〈Dancing Queen〉", "xFrGuyw1V8s")], exclude: ["monotone chant","screaming"], why: "疊和聲要音準與層次，單調念白或嘶吼會把和聲牆拆掉。" },
+  { id: "soft-female", el: "vocals", tag: "soft female vocal", zh: "柔軟女聲。不必全程氣聲，但力道仍收著，咬字清楚。", songs: [yt("Olivia Dean〈The Hardest Part〉", "ZC6MTqIGoQg"), yt("IU〈밤편지 / Through the Night〉", "BzYnNdJhZQw")], exclude: ["male vocal","screaming","rap"], why: "柔女聲與男聲主唱、嘶吼或說唱段落容易互相搶主導權。" },
+  { id: "airy-whisper", el: "vocals", tag: "airy whisper lead", zh: "氣音耳語主唱。只建議用在主歌或橋段，副歌仍可稍微打開。", songs: [yt("Billie Eilish〈ocean eyes〉", "viimfQi_pUw"), yt("王菲〈天空〉", "yPN9H450OHs")], exclude: ["belting throughout","screaming","autotune"], why: "耳語主唱怕整首吼唱或重自動調音，氣音細節會消失。" },
+  { id: "belting", el: "vocals", tag: "powerful belting chorus", zh: "副歌開放聲。主歌仍可氣聲，到副歌再把聲音打開。李佳薇路線。", songs: [yt("李佳薇〈甲乙丙丁〉", "YacpC7sUXMM"), yt("Adele〈Rolling in the Deep〉", "rYEDA3JcQqw"), yt("張惠妹〈聽海〉", "mLk61pfiHQ0")], exclude: ["whisper only throughout","muffled lo-fi vocal"], why: "副歌開放聲需要清晰的中高頻，全程耳語或悶濁 lo-fi 人聲會讓它使不上力。" },
+  { id: "falsetto", el: "vocals", tag: "layered falsetto", zh: "疊層假音。可用在副歌尾或和聲裡，增加夜色。", songs: [yt("The Weeknd〈Die For You〉", "RpyN9pFXUCg"), yt("Crush〈Beautiful〉", "W0cs6ciCt_k")], exclude: ["screaming","talk-rap verses"], why: "假音層要純、要亮，嘶吼或談話式說唱會把那層撕掉。" },
 
   // Structure
-  { id: "intimate-soar", el: "structure", tag: "intimate verse, soaring chorus", zh: "主歌親密收著，副歌向上打開。最通用的流行起伏。", songs: "Adele〈Someone Like You〉、林俊傑〈修煉愛情〉", exclude: ["flat dynamics throughout"], why: "這種結構靠對比，全程平的動態會讓副歌站不起來。" },
-  { id: "build", el: "structure", tag: "quiet verse building to a soaring chorus", zh: "主歌更靜，預副歌開始堆，副歌才真正釋放。", songs: "Coldplay〈Fix You〉、Billie Eilish〈Happier Than Ever〉", exclude: ["maximum loudness from the start"], why: "堆疊需要從低處開始，一開頭就最大聲就沒有旅程。" },
-  { id: "bridge", el: "structure", tag: "stripped-down bridge", zh: "橋段抽掉大部分樂器，只留人聲與一件主奏，再回到副歌。", songs: "Adele〈Hello〉、Taylor Swift〈All Too Well〉", exclude: ["constant wall of sound"], why: "橋段的留白需要把牆拆掉，全程聲牆會讓橋段不存在。" },
-  { id: "radio-chorus", el: "structure", tag: "radio-ready chorus", zh: "副歌要讓人一遍就記得，旋律鉤子清楚，層次夠亮。", songs: "Dua Lipa〈Don't Start Now〉、IU〈Blueming〉", exclude: ["formless jam","mumbled hook"], why: "電台副歌要好記，沒有形狀的即興或含糊鉤子會讓副歌散掉。" },
-  { id: "instrumental-break", el: "structure", tag: "instrumental break", zh: "器樂過門。可讓古箏、吉他或合成器說一句話，再接人聲。", songs: "周杰倫〈晴天〉、Coldplay〈Clocks〉", exclude: ["vocals without pause"], why: "器樂過門需要人聲讓路，全程不停唱就插不進去。" },
-  { id: "fade-outro", el: "structure", tag: "fade-out outro", zh: "淡出收尾。適合把黎明或夜色慢慢收掉，而不是突然切斷。", songs: "The Beatles〈Hey Jude〉", exclude: ["abrupt hard cut ending","screaming outro"], why: "淡出需要時間把氣氛收掉，硬切或嘶吼結尾會把余韻剪斷。" },
-  { id: "pre-chorus", el: "structure", tag: "pre-chorus lift", zh: "預副歌上推。K-Pop 與華語流行都很常用，讓副歌進來前先換一口氣。", songs: "IU〈Blueming〉、IU〈Good Day〉", exclude: ["verse straight into drop"], why: "預副歌是上台階，主歌直接進 drop 會少一級推進。" },
+  { id: "intimate-soar", el: "structure", tag: "intimate verse, soaring chorus", zh: "主歌親密收著，副歌向上打開。最通用的流行起伏。", songs: [yt("Adele〈Someone Like You〉", "hLQl3WQQoQ0"), yt("林俊傑〈修煉愛情〉", "LWV-f6dMN3Q")], exclude: ["flat dynamics throughout"], why: "這種結構靠對比，全程平的動態會讓副歌站不起來。" },
+  { id: "build", el: "structure", tag: "quiet verse building to a soaring chorus", zh: "主歌更靜，預副歌開始堆，副歌才真正釋放。", songs: [yt("Coldplay〈Fix You〉", "k4V3Mo61fJM"), yt("Billie Eilish〈Happier Than Ever〉", "5GJWxDKyk3A")], exclude: ["maximum loudness from the start"], why: "堆疊需要從低處開始，一開頭就最大聲就沒有旅程。" },
+  { id: "bridge", el: "structure", tag: "stripped-down bridge", zh: "橋段抽掉大部分樂器，只留人聲與一件主奏，再回到副歌。", songs: [yt("Adele〈Hello〉", "YQHsXMglC9A"), yt("Taylor Swift〈All Too Well〉", "tollGa3S0o8")], exclude: ["constant wall of sound"], why: "橋段的留白需要把牆拆掉，全程聲牆會讓橋段不存在。" },
+  { id: "radio-chorus", el: "structure", tag: "radio-ready chorus", zh: "副歌要讓人一遍就記得，旋律鉤子清楚，層次夠亮。", songs: [yt("Dua Lipa〈Don't Start Now〉", "oygrmJFKYZY"), yt("IU〈Blueming〉", "D1PvIWdJ8xo")], exclude: ["formless jam","mumbled hook"], why: "電台副歌要好記，沒有形狀的即興或含糊鉤子會讓副歌散掉。" },
+  { id: "instrumental-break", el: "structure", tag: "instrumental break", zh: "器樂過門。可讓古箏、吉他或合成器說一句話，再接人聲。", songs: [yt("周杰倫〈晴天〉", "DYptgVvkVLQ"), yt("Coldplay〈Clocks〉", "d020hcWA_Wg")], exclude: ["vocals without pause"], why: "器樂過門需要人聲讓路，全程不停唱就插不進去。" },
+  { id: "fade-outro", el: "structure", tag: "fade-out outro", zh: "淡出收尾。適合把黎明或夜色慢慢收掉，而不是突然切斷。", songs: [yt("The Beatles〈Hey Jude〉", "A_MjCqQoLLA")], exclude: ["abrupt hard cut ending","screaming outro"], why: "淡出需要時間把氣氛收掉，硬切或嘶吼結尾會把余韻剪斷。" },
+  { id: "pre-chorus", el: "structure", tag: "pre-chorus lift", zh: "預副歌上推。K-Pop 與華語流行都很常用，讓副歌進來前先換一口氣。", songs: [yt("IU〈Blueming〉", "D1PvIWdJ8xo"), yt("IU〈Good Day〉", "jeqdYqsrsA0")], exclude: ["verse straight into drop"], why: "預副歌是上台階，主歌直接進 drop 會少一級推進。" },
 
   // Production
-  { id: "warm-analog", el: "production", tag: "warm analog mix", zh: "溫暖類比混音。中低頻圓、高頻不刺，像類比設備的溫度。", songs: "Daft Punk〈Get Lucky〉、Olivia Dean〈Dive〉", exclude: ["harsh digital clipping","tinny demo sound"], why: "類比溫度怕刺耳削波與錫薄小樣音質。" },
-  { id: "wide-reverb", el: "production", tag: "wide reverb", zh: "寬混響。讓人聲與鋪底有空間，但主唱仍可相對靠前。", songs: "Beach House〈Space Song〉、Lana Del Rey〈Video Games〉", exclude: ["bone-dry mix","tiny phone speaker sound"], why: "寬混響需要空間，骨幹乾燥混音會把廳堂拿掉。" },
-  { id: "cinematic-mix", el: "production", tag: "cinematic, modern polish", zh: "電影感又現代的完成度。層次清楚，像發行規格，而不是寫「professional」。", songs: "Billie Eilish〈No Time To Die〉", exclude: ["lo-fi hiss","bedroom demo noise"], why: "電影規格的完成度與故意的bedroom噪音是相反方向。" },
-  { id: "modern-mix", el: "production", tag: "modern mix", zh: "現代混音。人聲清楚、低音有控制、左右有寬度。", songs: "Dua Lipa〈Don't Start Now〉、IU〈Blueming〉", exclude: ["muddy mix","lo-fi hiss"], why: "現代混音要清晰的層次，混濁或磁帶噪會把它拉回小樣。" },
-  { id: "dawn-prod", el: "production", tag: "dawn atmosphere", zh: "黎明空間。高頻可以慢慢打開，殘響偏柔，像天色剛亮。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones"], why: "黎明空間與夜店熱曲、驚悚低音場景相反。" },
-  { id: "rain-prod", el: "production", tag: "night rain atmosphere", zh: "夜雨混音。潮濕、微暗，高頻不要太亮。", songs: "Heize〈You, Clouds, Rain〉", exclude: ["dry stadium mix","festival drop"], why: "潮濕夜雨怕乾燥場館混音和節慶落下。" },
-  { id: "dry-vocal", el: "production", tag: "intimate dry vocal", zh: "人聲較乾、很近。殘響留給伴奏，主唱像在耳邊。", songs: "Billie Eilish〈when the party's over〉", exclude: ["cavernous vocal reverb","stadium delay"], why: "近而乾的人聲怕洞穴殘響與場館延遲，會把嘴巴拉遠。" },
-  { id: "warm-cinematic", el: "production", tag: "warm cinematic mix", zh: "溫暖電影混音。有畫面，但不冷、不空，適合日出收尾。", songs: "周深〈化身孤島的鯨〉、Adele〈Easy On Me〉", exclude: ["cold metallic mix","glitchy artifacts"], why: "溫暖電影感怕冰冷金屬質地與故障顆粒。" },
+  { id: "warm-analog", el: "production", tag: "warm analog mix", zh: "溫暖類比混音。中低頻圓、高頻不刺，像類比設備的溫度。", songs: [yt("Daft Punk〈Get Lucky〉", "5NV6Rdv1a3I"), yt("Olivia Dean〈Dive〉", "NM4e606yFJg")], exclude: ["harsh digital clipping","tinny demo sound"], why: "類比溫度怕刺耳削波與錫薄小樣音質。" },
+  { id: "wide-reverb", el: "production", tag: "wide reverb", zh: "寬混響。讓人聲與鋪底有空間，但主唱仍可相對靠前。", songs: [yt("Beach House〈Space Song〉", "RBtlPT23PTM"), yt("Lana Del Rey〈Video Games〉", "cE6wxDqdOV0")], exclude: ["bone-dry mix","tiny phone speaker sound"], why: "寬混響需要空間，骨幹乾燥混音會把廳堂拿掉。" },
+  { id: "cinematic-mix", el: "production", tag: "cinematic, modern polish", zh: "電影感又現代的完成度。層次清楚，像發行規格，而不是寫「professional」。", songs: [yt("Billie Eilish〈No Time To Die〉", "BboMpayJomw")], exclude: ["lo-fi hiss","bedroom demo noise"], why: "電影規格的完成度與故意的bedroom噪音是相反方向。" },
+  { id: "modern-mix", el: "production", tag: "modern mix", zh: "現代混音。人聲清楚、低音有控制、左右有寬度。", songs: [yt("Dua Lipa〈Don't Start Now〉", "oygrmJFKYZY"), yt("IU〈Blueming〉", "D1PvIWdJ8xo")], exclude: ["muddy mix","lo-fi hiss"], why: "現代混音要清晰的層次，混濁或磁帶噪會把它拉回小樣。" },
+  { id: "dawn-prod", el: "production", tag: "dawn atmosphere", zh: "黎明空間。高頻可以慢慢打開，殘響偏柔，像天色剛亮。", songs: [yt("Norah Jones〈Sunrise〉", "fd02pGJx0s0")], exclude: ["nightclub banger","horror drones"], why: "黎明空間與夜店熱曲、驚悚低音場景相反。" },
+  { id: "rain-prod", el: "production", tag: "night rain atmosphere", zh: "夜雨混音。潮濕、微暗，高頻不要太亮。", songs: [yt("Heize〈You, Clouds, Rain〉", "afxLaQiLu-o")], exclude: ["dry stadium mix","festival drop"], why: "潮濕夜雨怕乾燥場館混音和節慶落下。" },
+  { id: "dry-vocal", el: "production", tag: "intimate dry vocal", zh: "人聲較乾、很近。殘響留給伴奏，主唱像在耳邊。", songs: [yt("Billie Eilish〈when the party's over〉", "pbMwTqkKSps")], exclude: ["cavernous vocal reverb","stadium delay"], why: "近而乾的人聲怕洞穴殘響與場館延遲，會把嘴巴拉遠。" },
+  { id: "warm-cinematic", el: "production", tag: "warm cinematic mix", zh: "溫暖電影混音。有畫面，但不冷、不空，適合日出收尾。", songs: [yt("周深〈化身孤島的鯨〉", "ALuJdb96_Fs"), yt("Adele〈Easy On Me〉", "U3ASj1L6_sY")], exclude: ["cold metallic mix","glitchy artifacts"], why: "溫暖電影感怕冰冷金屬質地與故障顆粒。" },
 
   // Lyrics tags (community convention)
-  { id: "tag-verse", el: "lyrics", tag: "[Verse]", zh: "主歌。獨立一行，寫在該段歌詞上方。社群慣例，非官方語法。", songs: "結構對照：Adele、IU、周杰倫等流行歌的主歌段落", exclude: [], why: "" },
-  { id: "tag-pre", el: "lyrics", tag: "[Pre-Chorus]", zh: "預副歌。用來上台階，讓副歌進來前先換氣。", songs: "結構對照：IU〈Blueming〉、多數 K-Pop 編排", exclude: [], why: "" },
-  { id: "tag-chorus", el: "lyrics", tag: "[Chorus]", zh: "副歌。重複出現時，歌詞要用一模一樣的字，hook 才唱得穩。", songs: "結構對照：Dua Lipa〈Don't Start Now〉、ABBA〈Dancing Queen〉", exclude: [], why: "" },
-  { id: "tag-bridge", el: "lyrics", tag: "[Bridge]", zh: "橋段。通常只出現一次，旋律或觀點換一下，再回到副歌。", songs: "結構對照：Adele〈Hello〉、Taylor Swift〈All Too Well〉", exclude: [], why: "" },
-  { id: "tag-inst", el: "lyrics", tag: "[Instrumental]", zh: "器樂段。歌詞欄不要在這裡寫長篇製作說明，否則可能被唱出來。", songs: "結構對照：Coldplay〈Clocks〉、周杰倫〈晴天〉過門", exclude: [], why: "" },
-  { id: "tag-outro", el: "lyrics", tag: "[Outro]", zh: "尾奏。可接淡出，或留一句收束。", songs: "結構對照：The Beatles〈Hey Jude〉淡出", exclude: [], why: "" },
+  { id: "tag-verse", el: "lyrics", tag: "[Verse]", zh: "主歌。獨立一行，寫在該段歌詞上方。社群慣例，非官方語法。", songs: [], songsPrefix: "結構對照：Adele、IU、周杰倫等流行歌的主歌段落", exclude: [], why: "" },
+  { id: "tag-pre", el: "lyrics", tag: "[Pre-Chorus]", zh: "預副歌。用來上台階，讓副歌進來前先換氣。", songsPrefix: "結構對照：", songs: [yt("IU〈Blueming〉", "D1PvIWdJ8xo")], songsNote: "、多數 K-Pop 編排", exclude: [], why: "" },
+  { id: "tag-chorus", el: "lyrics", tag: "[Chorus]", zh: "副歌。重複出現時，歌詞要用一模一樣的字，hook 才唱得穩。", songsPrefix: "結構對照：", songs: [yt("Dua Lipa〈Don't Start Now〉", "oygrmJFKYZY"), yt("ABBA〈Dancing Queen〉", "xFrGuyw1V8s")], exclude: [], why: "" },
+  { id: "tag-bridge", el: "lyrics", tag: "[Bridge]", zh: "橋段。通常只出現一次，旋律或觀點換一下，再回到副歌。", songsPrefix: "結構對照：", songs: [yt("Adele〈Hello〉", "YQHsXMglC9A"), yt("Taylor Swift〈All Too Well〉", "tollGa3S0o8")], exclude: [], why: "" },
+  { id: "tag-inst", el: "lyrics", tag: "[Instrumental]", zh: "器樂段。歌詞欄不要在這裡寫長篇製作說明，否則可能被唱出來。", songsPrefix: "結構對照：", songs: [yt("Coldplay〈Clocks〉", "d020hcWA_Wg"), yt("周杰倫〈晴天〉", "DYptgVvkVLQ")], songsNote: "過門", exclude: [], why: "" },
+  { id: "tag-outro", el: "lyrics", tag: "[Outro]", zh: "尾奏。可接淡出，或留一句收束。", songsPrefix: "結構對照：", songs: [yt("The Beatles〈Hey Jude〉", "A_MjCqQoLLA")], songsNote: "淡出", exclude: [], why: "" },
 
   // Extra exclude nouns for the exclude section (selectable)
-  { id: "ex-male", el: "exclude", tag: "male vocal", zh: "排除男聲。做氣聲或柔女聲主唱時幾乎都要加。", songs: "—", exclude: [], why: "避免主唱性別被換成男聲。" },
-  { id: "ex-rap", el: "exclude", tag: "rap", zh: "排除說唱段落。", songs: "—", exclude: [], why: "避免副歌前後突然出現 rap verse。" },
-  { id: "ex-auto", el: "exclude", tag: "autotune", zh: "排除明顯自動調音／機器人音高。", songs: "—", exclude: [], why: "氣聲與親密人聲通常不要硬邊 autotune。" },
-  { id: "ex-drums", el: "exclude", tag: "heavy drums", zh: "排除重鼓。", songs: "—", exclude: [], why: "抒情與夢幻路線需要把鼓的重量壓下來。" },
-  { id: "ex-edm", el: "exclude", tag: "EDM drop", zh: "排除電音落下。", songs: "—", exclude: [], why: "避免副歌突然變成舞曲 drop。" },
-  { id: "ex-dist", el: "exclude", tag: "distortion", zh: "排除失真。", songs: "—", exclude: [], why: "保護氣聲、古箏、鋼琴等細音色。" },
-  { id: "ex-rock", el: "exclude", tag: "rock guitar", zh: "排除搖滾電吉他。", songs: "—", exclude: [], why: "避免把東方或夢幻編制換成樂隊搖滾。" },
-  { id: "ex-scream", el: "exclude", tag: "screaming", zh: "排除嘶吼。", songs: "—", exclude: [], why: "與氣聲女聲完全相反。" },
-  { id: "ex-hats", el: "exclude", tag: "trap hi-hats", zh: "排除陷阱踩鑔。", songs: "—", exclude: [], why: "保護華語抒情與東方樂器的留白。" },
-  { id: "ex-808", el: "exclude", tag: "808 bass", zh: "排除 808 重低音。", songs: "—", exclude: [], why: "避免蓋過古箏、二胡與柔鋼琴。" },
-  { id: "ex-metal", el: "exclude", tag: "heavy metal", zh: "排除重金屬。", songs: "—", exclude: [], why: "與夢幻流行、韓系 R&B、東方抒情都衝突。" },
-  { id: "ex-hardstyle", el: "exclude", tag: "hardstyle", zh: "排除 hardstyle 硬派電音。", songs: "—", exclude: [], why: "踢鼓過硬，不適合中板靈魂或抒情。" }
+  { id: "ex-male", el: "exclude", tag: "male vocal", zh: "排除男聲。做氣聲或柔女聲主唱時幾乎都要加。", songs: [], exclude: [], why: "避免主唱性別被換成男聲。" },
+  { id: "ex-rap", el: "exclude", tag: "rap", zh: "排除說唱段落。", songs: [], exclude: [], why: "避免副歌前後突然出現 rap verse。" },
+  { id: "ex-auto", el: "exclude", tag: "autotune", zh: "排除明顯自動調音／機器人音高。", songs: [], exclude: [], why: "氣聲與親密人聲通常不要硬邊 autotune。" },
+  { id: "ex-drums", el: "exclude", tag: "heavy drums", zh: "排除重鼓。", songs: [], exclude: [], why: "抒情與夢幻路線需要把鼓的重量壓下來。" },
+  { id: "ex-edm", el: "exclude", tag: "EDM drop", zh: "排除電音落下。", songs: [], exclude: [], why: "避免副歌突然變成舞曲 drop。" },
+  { id: "ex-dist", el: "exclude", tag: "distortion", zh: "排除失真。", songs: [], exclude: [], why: "保護氣聲、古箏、鋼琴等細音色。" },
+  { id: "ex-rock", el: "exclude", tag: "rock guitar", zh: "排除搖滾電吉他。", songs: [], exclude: [], why: "避免把東方或夢幻編制換成樂隊搖滾。" },
+  { id: "ex-scream", el: "exclude", tag: "screaming", zh: "排除嘶吼。", songs: [], exclude: [], why: "與氣聲女聲完全相反。" },
+  { id: "ex-hats", el: "exclude", tag: "trap hi-hats", zh: "排除陷阱踩鑔。", songs: [], exclude: [], why: "保護華語抒情與東方樂器的留白。" },
+  { id: "ex-808", el: "exclude", tag: "808 bass", zh: "排除 808 重低音。", songs: [], exclude: [], why: "避免蓋過古箏、二胡與柔鋼琴。" },
+  { id: "ex-metal", el: "exclude", tag: "heavy metal", zh: "排除重金屬。", songs: [], exclude: [], why: "與夢幻流行、韓系 R&B、東方抒情都衝突。" },
+  { id: "ex-hardstyle", el: "exclude", tag: "hardstyle", zh: "排除 hardstyle 硬派電音。", songs: [], exclude: [], why: "踢鼓過硬，不適合中板靈魂或抒情。" }
 ];
 
 const COMBOS = [
@@ -484,7 +520,7 @@ function fallbackCopy(text, done) {
 
 function matchesQuery(opt, q) {
   if (!q) return true;
-  const hay = [opt.tag, opt.zh, opt.songs, (opt.exclude||[]).join(" "), opt.why || ""].join(" ").toLowerCase();
+  const hay = [opt.tag, opt.zh, songsText(opt), (opt.exclude||[]).join(" "), opt.why || ""].join(" ").toLowerCase();
   return hay.includes(q);
 }
 
@@ -538,14 +574,14 @@ function renderTable(el, rows) {
     return html;
   }
   const isEx = el.id === "exclude";
-  html += "<div class=\"card\" style=\"overflow:auto\"><table><thead><tr><th>加入</th><th>英文標籤</th><th>中文說明</th><th>代表歌曲</th>" + (isEx ? "" : "<th>Exclude 配對</th>") + "</tr></thead><tbody>";
+  html += "<div class=\"card\" style=\"overflow:auto\"><table><thead><tr><th>加入</th><th>英文標籤</th><th>中文說明</th><th>代表歌曲（可聽）</th>" + (isEx ? "" : "<th>Exclude 配對</th>") + "</tr></thead><tbody>";
   rows.forEach(o => {
     const added = isEx ? state.excludes.some(x => x.toLowerCase() === o.tag.toLowerCase()) : state.styleIds.includes(o.id);
     const btnLabel = isEx ? (added ? "已排除" : "加入排除") : (el.id === "lyrics" ? "複製" : (added ? "已加入" : "加入"));
     html += "<tr><td><button class=\"tiny" + (added ? " primary" : "") + "\" type=\"button\" data-add=\"" + o.id + "\"" + (added && el.id !== "lyrics" ? " disabled" : "") + ">" + btnLabel + "</button></td>";
     html += '<td class="tag-cell">' + escapeHtml(o.tag) + "</td>";
     html += "<td>" + escapeHtml(o.zh) + "</td>";
-    html += '<td class="songs">' + escapeHtml(o.songs) + "</td>";
+    html += '<td class="songs">' + renderSongs(o) + "</td>";
     if (!isEx) {
       if (o.exclude && o.exclude.length) {
         html += '<td><div class="ex-tags">' + escapeHtml(o.exclude.join(", ")) + '</div><div class="why">' + escapeHtml(o.why || "") + "</div></td>";
@@ -618,7 +654,7 @@ function renderBuilder() {
 }
 
 function renderFooter() {
-  document.getElementById("footer").innerHTML = '<section class="block"><h2 style="font-family:var(--serif);font-size:20px">資料來源與使用原則</h2><p>風格欄建議依序寫：曲風、情緒、速度與律動、樂器分工、人聲、結構起伏、製作質感。BPM 請用 around 寫法。Exclude 只寫名詞，不要在風格欄寫否定。歌詞欄的 <code>[Verse]</code> 等標籤是社群慣例，官方並未把它們列為正式語法。「120 字元」是舊版習慣，v6 風格欄較長；約 1000 字元來自第三方實測，不是官方上限。</p><p>來源：<a href="https://help.suno.com/en/articles/9010177">Suno 官方音樂詞彙表</a> · <a href="https://help.suno.com/en/articles/3161921">Exclude Styles 說明</a> · <a href="https://help.suno.com/en/articles/13924481">Suno v6 FAQ</a> · <a href="https://usesuno.com/guide/prompting/">usesuno 提示詞指南</a> · <a href="https://hookgenius.app/learn/suno-character-limits/">HookGenius 字元限制實測</a></p><p>代表歌曲都是確實存在的作品，用來讓你聽出該標籤的感覺；2026年11月榜單例子有標註來源區間。此頁可完全離線使用，組合器狀態會存在這個瀏覽器的 localStorage。</p></section>';
+  document.getElementById("footer").innerHTML = '<section class="block"><h2 style="font-family:var(--serif);font-size:20px">資料來源與使用原則</h2><p>風格欄建議依序寫：曲風、情緒、速度與律動、樂器分工、人聲、結構起伏、製作質感。BPM 請用 around 寫法。Exclude 只寫名詞，不要在風格欄寫否定。歌詞欄的 <code>[Verse]</code> 等標籤是社群慣例，官方並未把它們列為正式語法。「120 字元」是舊版習慣，v6 風格欄較長；約 1000 字元來自第三方實測，不是官方上限。</p><p>來源：<a href="https://help.suno.com/en/articles/9010177">Suno 官方音樂詞彙表</a> · <a href="https://help.suno.com/en/articles/3161921">Exclude Styles 說明</a> · <a href="https://help.suno.com/en/articles/13924481">Suno v6 FAQ</a> · <a href="https://usesuno.com/guide/prompting/">usesuno 提示詞指南</a> · <a href="https://hookgenius.app/learn/suno-character-limits/">HookGenius 字元限制實測</a></p><p>代表歌曲都是確實存在的作品，點歌名可到官方影片或官方音訊聆聽（新分頁開啟）；2026年11月榜單例子有標註來源區間。此頁可完全離線使用，組合器狀態會存在這個瀏覽器的 localStorage。</p></section>';
 }
 
 function onClick(ev) {
