@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suno 提示詞對照選單｜ELARA / HANA</title>
+<meta name="description" content="Suno 風格欄、歌詞標籤、Exclude Styles 與滑桿的對照選單，含代表歌曲、Exclude 配對，以及可複製的提示詞組合器。">
+<style>
+  :root {
+    --bg: #0e1218;
+    --bg-2: #141a22;
+    --paper: #1a212b;
+    --paper-2: #1f2833;
+    --ink: #efe7d8;
+    --muted: #b7ae9d;
+    --dim: #8b8376;
+    --line: #2c342e;
+    --gold: #d4b483;
+    --gold-2: #f0d7a8;
+    --dawn: #e08a62;
+    --teal: #7ea3a0;
+    --ok: #8fbf9a;
+    --warn: #e0b05c;
+    --danger: #d9786a;
+    --chip: #262f3a;
+    --shadow: 0 16px 40px rgba(0,0,0,.35);
+    --sans: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Source Han Sans TC", ui-sans-serif, system-ui, sans-serif;
+    --serif: "Songti TC", "PMingLiU", "Noto Serif TC", "Iowan Old Style", "Times New Roman", ui-serif, Georgia, serif;
+    --mono: "SF Mono", "Cascadia Mono", "Noto Sans Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 500px at 10% -10%, rgba(224,138,98,.16), transparent 55%),
+      radial-gradient(900px 400px at 100% 0%, rgba(212,180,131,.08), transparent 50%),
+      linear-gradient(180deg, #121822 0%, #0e1218 28%, #0e1218 100%);
+  }
+  a { color: var(--gold); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 28px 20px 120px; }
+  header.hero { margin-bottom: 28px; }
+  header.hero .eyebrow {
+    color: var(--gold); letter-spacing: .18em; font-size: 11px; text-transform: uppercase; margin: 0 0 8px;
+  }
+  header.hero h1 {
+    font-family: var(--serif); font-weight: 600; font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.2; margin: 0 0 10px; letter-spacing: .02em;
+  }
+  header.hero p.lead { color: var(--muted); max-width: 70ch; line-height: 1.7; margin: 0; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .builder { position: static !important; }
+  }
+  .toolbar, .card, .builder {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+  }
+  .toolbar { padding: 14px; position: sticky; top: 10px; z-index: 5; backdrop-filter: blur(10px); background: rgba(26,33,43,.92); margin-bottom: 16px; display: grid; gap: 10px; }
+  .search { width: 100%; border: 1px solid var(--line); background: var(--bg-2); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: inherit; }
+  .search:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip, button, .tag {
+    font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+    border-radius: 999px; padding: 6px 11px; font-size: 13px;
+  }
+  .chip[aria-pressed="true"], .chip.active { background: #3a3124; border-color: var(--gold); color: var(--gold-2); }
+  button.primary { background: var(--gold); color: #1a140c; border-color: var(--gold); font-weight: 650; }
+  button.primary:hover { filter: brightness(1.05); }
+  button.ghost:hover, .chip:hover { border-color: var(--gold); }
+  button.warn { color: #1a140c; background: var(--warn); border-color: var(--warn); }
+  button.tiny { padding: 3px 8px; border-radius: 8px; font-size: 12px; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  section.block { margin: 0 0 22px; }
+  section.block h2 { font-family: var(--serif); font-size: 24px; margin: 0 0 6px; }
+  section.block .hint { color: var(--muted); margin: 0 0 12px; line-height: 1.65; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--gold-2); font-weight: 600; font-size: 12px; letter-spacing: .04em; position: sticky; top: 72px; background: var(--paper); }
+  td.tag-cell { font-family: var(--mono); color: var(--gold-2); white-space: nowrap; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .songs { color: var(--muted); }
+  .why { color: var(--dim); font-size: 12.5px; line-height: 1.55; }
+  .ex-tags { color: var(--dawn); font-family: var(--mono); font-size: 12px; }
+  .builder { position: sticky; top: 10px; padding: 16px; box-shadow: var(--shadow); }
+  .builder h2 { font-family: var(--serif); font-size: 20px; margin: 0 0 8px; }
+  .builder .count { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .builder .count.over { color: var(--danger); }
+  textarea, pre.box {
+    width: 100%; min-height: 96px; resize: vertical; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg-2); color: var(--ink); padding: 10px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .selected { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: #2a241c; border: 1px solid #4a3d2a; color: var(--gold-2); border-radius: 999px; padding: 4px 8px 4px 10px; font-size: 12px; }
+  .pill.ex { background: #2a1c1a; border-color: #5a322c; color: #f0c2b6; }
+  .pill button { all: unset; cursor: pointer; color: inherit; padding: 0 2px; font-weight: 700; }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+  .warn-list { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: rgba(224,176,92,.1); color: var(--warn); font-size: 12.5px; display: none; }
+  .warn-list.show { display: block; }
+  .combo { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); margin: 0 0 10px; }
+  .combo h3 { margin: 0 0 6px; font-size: 16px; font-family: var(--serif); }
+  .combo pre { margin: 6px 0; }
+  .footer { color: var(--dim); font-size: 13px; line-height: 1.7; margin-top: 16px; }
+  .kicker { font-size: 12px; color: var(--teal); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .empty { color: var(--dim); font-size: 13px; padding: 8px 0; }
+  .slider-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .slider-card { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); }
+  .slider-card h3 { margin: 0 0 6px; font-size: 15px; }
+  .copied { color: var(--ok); font-size: 12px; min-height: 1em; }
+  code { font-family: var(--mono); color: var(--gold-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">ELARA · HANA · Suno v6</p>
+    <h1>Suno 提示詞對照選單</h1>
+    <p class="lead">依風格欄七個元素排列，點選即可組成提示詞。每項附英文標籤、中文說明、代表歌曲，以及建議的 Exclude Styles。適合 HANA 的強項：韓系 R&amp;B、輕柔氛圍抒情、東方樂器華語抒情，還有夢幻氣聲女聲。歌詞欄的方括號標籤是社群慣例，不是官方語法。</p>
+  </header>
+
+  <div class="toolbar">
+    <input class="search" id="search" type="search" placeholder="搜尋標籤、中文說明或歌曲（例如 Dream pop、古箏、Beach House）" aria-label="搜尋選項">
+    <div class="chips" id="elementChips"></div>
+  </div>
+
+  <div class="layout">
+    <main id="main"></main>
+    <aside class="builder" id="builder">
+      <div class="kicker">Prompt builder</div>
+      <h2>提示詞組合器</h2>
+      <p class="hint" style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 8px;">點表格中的「加入」後，標籤會依元素順序排進風格欄。配對的 Exclude 會自動建議加入，可再手動刪除。若 Exclude 與已選風格衝突，會略過並提示。</p>
+      <div class="count" id="styleCount">風格欄 0 / 約 1000 字元</div>
+      <div class="selected" id="stylePills"></div>
+      <textarea id="styleBox" readonly placeholder="風格欄會顯示在這裡"></textarea>
+      <div class="actions">
+        <button class="primary tiny" type="button" id="copyStyle">複製風格欄</button>
+        <button class="tiny" type="button" id="clearStyle">清空風格</button>
+      </div>
+      <p class="copied" id="styleCopied"></p>
+      <h3 style="font-family:var(--serif);font-size:16px;margin:14px 0 6px;">Exclude Styles</h3>
+      <div class="selected" id="exPills"></div>
+      <textarea id="exBox" readonly placeholder="排除欄會顯示在這裡"></textarea>
+      <div class="actions">
+        <button class="primary tiny" type="button" id="copyEx">複製 Exclude</button>
+        <button class="tiny" type="button" id="clearEx">清空 Exclude</button>
+        <button class="tiny" type="button" id="copyBoth">複製兩欄</button>
+      </div>
+      <p class="copied" id="exCopied"></p>
+      <div class="warn-list" id="warnings"></div>
+    </aside>
+  </div>
+
+  <div class="footer" id="footer"></div>
+</div>
+<script>
+const STORAGE_KEY = "suno-prompt-menu-v1";
+const STYLE_LIMIT = 1000;
+
+const ELEMENTS = [
+  { id: "genre", order: 1, name: "1 曲風 Genre", blurb: "先寫一個主曲風，最多再加一個副曲風。這是風格欄的骨架，也最常搭配 Exclude。" },
+  { id: "mood", order: 2, name: "2 情緒 Mood", blurb: "寫聽得出來的感覺，避免 beautiful、professional 這種空話。" },
+  { id: "tempo", order: 3, name: "3 速度與律動 Tempo / Groove", blurb: "BPM 只是大約方向，建議寫 around N BPM，Suno 不會精準卡在那個速度。" },
+  { id: "instruments", order: 4, name: "4 樂器與分工 Instruments", blurb: "寫出主奏與伴奏，兩到四樣即可。重點是每樣負責什麼，而不是把樂器列一長串。" },
+  { id: "vocals", order: 5, name: "5 人聲 Vocals", blurb: "寫性別、音色與唱法。HANA 最穩的是夢幻氣聲、近講親密感，副歌再疊和聲。" },
+  { id: "structure", order: 6, name: "6 結構與起伏 Structure", blurb: "讓主歌收著唱、副歌放開。熱門歌幾乎都有這種起伏。" },
+  { id: "production", order: 7, name: "7 製作質感與空間 Production", blurb: "用一句場景或混音質感統一整首歌的氣氛。" },
+  { id: "lyrics", order: 8, name: "歌詞欄結構標籤", blurb: "方括號標籤放在歌詞欄、獨立一行，寫在該段歌詞上方。這是社群慣例，不是 Suno 官方語法。重複的副歌要用一模一樣的字。不要在歌詞欄寫曲風或 BPM，以免被唱出來。" },
+  { id: "exclude", order: 9, name: "Exclude Styles", blurb: "只放不想出現的東西，寫名詞、不要加 no。不要跟風格欄打架：風格欄寫了 piano，這裡就別再排除 piano。" },
+  { id: "sliders", order: 10, name: "滑桿與模式 Sliders", blurb: "生成前先設滑桿。想完整保留你寫的標籤，把 Variety 調到 0。" }
+];
+
+const OPTIONS = [
+  // Genre
+  { id: "dream-pop", el: "genre", tag: "Dream pop", zh: "夢幻流行。空氣感合成器鋪底，旋律柔、層次薄而亮，適合夜色與日出前的氛圍。", songs: "Beach House〈Space Song〉", exclude: ["heavy metal","distortion","rap","aggressive drums","EDM drop"], why: "夢幻流行要空氣感與柔和層次，硬金屬、失真與攻擊性鼓組會毀掉鋪底。" },
+  { id: "rnb", el: "genre", tag: "contemporary R&B", zh: "當代 R&B。中板律動、親密人聲，低音溫暖，副歌可以打開但不需電音落下。", songs: "SZA〈Kill Bill〉、The Weeknd〈Die For You〉", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "R&B 靠柔軟人聲與律動，喊唱與硬搖滾會蓋過人聲。" },
+  { id: "kpop", el: "genre", tag: "K-pop", zh: "韓流流行。旋律鉤子清楚，主副歌對比鮮明，和聲與預副歌（pre-chorus）常很完整。", songs: "IU〈Blueming〉", exclude: ["death metal","screaming","heavy distortion","country banjo"], why: "K-Pop 要乾淨旋律與人聲層次，極端重型曲風會把鉤子蓋掉。" },
+  { id: "kpop-dance", el: "genre", tag: "K-pop electro dance", zh: "韓系電音舞曲。節拍明確、合成器亮、副歌衝擊強，偏女團舞曲走向。", songs: "A2O〈NEON〉（2026年11月台灣 Spotify／韓國 Melon 榜熱門）", exclude: ["funeral dirge","acoustic campfire folk","death metal","country banjo"], why: "電音舞曲需要清晰節拍與合成器衝擊，葬禮進行曲或純粹campfire原音會把律動抽走。" },
+  { id: "krnb", el: "genre", tag: "Korean R&B", zh: "韓系 R&B。氣聲或柔聲、夜間城市感，節奏搖擺但不攻擊。HANA 的強項之一。", songs: "Crush〈Beautiful〉、Heize〈You, Clouds, Rain〉（비도 오고 그래서）", exclude: ["heavy metal","screaming","punk guitar","bagpipes"], why: "韓系 R&B 靠柔軟人聲與夜間律動，喊唱與硬搖滾會蓋過人聲。" },
+  { id: "mando-ballad", el: "genre", tag: "Mandopop ballad", zh: "華語抒情。中慢板、旋律先行，鋼琴或弦樂托著人聲，情緒比節奏更重要。", songs: "李佳薇〈甲乙丙丁〉（2026年11月 KKBOX 華語榜）、孫燕姿〈我不難過〉", exclude: ["trap hi-hats","EDM drop","heavy metal","rap"], why: "華語抒情以旋律與情緒為主，陷阱鼓與電音落下會把氣氛拉走。" },
+  { id: "oriental", el: "genre", tag: "Oriental pop ballad", zh: "東方樂器流行抒情。古箏、琵琶、二胡與現代人聲、鋼琴並置，留白很重要。", songs: "周杰倫〈青花瓷〉、〈東風破〉", exclude: ["trap hi-hats","EDM drop","heavy metal","808 bass","rap"], why: "東方樂器需要音色空間與留白，重低音與電音會蓋過古箏、琵琶與二胡。" },
+  { id: "indie-pop", el: "genre", tag: "Indie pop", zh: "獨立流行。旋律親民但音色較有個性，常帶夢幻合成器或溫暖吉他。", songs: "The 1975〈About You〉", exclude: ["death metal","screaming","hardstyle","bro-country"], why: "獨立流行偏氣氛與旋律線，極端重型或硬派鄉村會壓過合成器與人聲。" },
+  { id: "art-pop", el: "genre", tag: "Art pop", zh: "藝術流行。編曲與音色選擇較大膽，人聲可以很近、很氣聲，但不走制式舞曲公式。", songs: "Lorde〈Ribs〉", exclude: ["generic EDM drop","bro-country","death metal","party rap"], why: "Art pop 講求獨特音色與層次，制式電音落下會讓它變得普通。" },
+  { id: "uk-soul", el: "genre", tag: "UK soul", zh: "英式靈魂。溫暖中板、復古電鋼琴、人聲親切，像深夜電台。", songs: "Olivia Dean〈Dive〉、Jamie Miller〈Babydoll〉（2026年11月英國 Official Charts）", exclude: ["death metal","screaming","trap 808s","hardstyle","EDM drop"], why: "英式靈魂靠溫暖中板與電鋼琴，重型鼓與電音落下會破壞親密感。" },
+  { id: "soul-pop", el: "genre", tag: "Soul pop", zh: "靈魂流行。比傳統靈魂樂更貼近流行副歌，人聲溫暖，律動從容。", songs: "Olivia Dean〈The Hardest Part〉、Jamie Miller〈Babydoll〉", exclude: ["death metal","screaming","hardstyle","distortion"], why: "靈魂流行要人聲溫度與從容律動，失真與硬派電子會把溫暖抽掉。" },
+  { id: "alt-rnb", el: "genre", tag: "alternative R&B", zh: "另類 R&B。比主流 R&B 更空、更夜，常帶氣聲與低音遊走。", songs: "SZA〈Kill Bill〉、DEAN〈D (Half Moon)〉", exclude: ["heavy metal","punk","screaming","bagpipes"], why: "另類 R&B 要夜間律動與氣聲空間，硬核編制會擠掉低音。" },
+  { id: "jpop", el: "genre", tag: "J-pop", zh: "日本流行。旋律完整、副歌開闊；創作型走向可偏另類流行或流行搖滾。", songs: "Vaundy〈しわあわせ〉、Mrs. GREEN APPLE〈ライラック〉", exclude: ["death metal","trap 808s","bro-country","screaming"], why: "J-Pop 旋律線要清楚，重型嘶吼或陷阱鼓會打斷副歌的開闊感。" },
+  { id: "psych-pop", el: "genre", tag: "psychedelic pop", zh: "迷幻流行。相位感合成器、慵懶律動，音色會漂、會閃。", songs: "Tame Impala〈The Less I Know The Better〉、Tame Impala & JENNIE〈Dracula〉（2026）", exclude: ["death metal","acoustic campfire folk","opera","hardcore rap"], why: "迷幻流行靠相位合成器與慵懶律動，極端曲風或純粹營火原音會把迷幻層拿掉。" },
+  { id: "ambient-ballad", el: "genre", tag: "ambient pop ballad", zh: "氛圍抒情。速度慢、空間大，人聲幾乎貼在耳邊，適合輕柔浪漫的 HANA 路線。", songs: "Billie Eilish〈when the party's over〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","EDM drop","screaming","distortion"], why: "氛圍抒情靠留白與近距離人聲，攻擊性鼓組與失真會把空間擠掉。" },
+  { id: "country", el: "genre", tag: "contemporary country", zh: "當代鄉村。敘事清楚、吉他為主、人聲較直。這不是 HANA 的主路線，列在此方便對照與排除。", songs: "Ella Langley〈Choosin' Texas〉（2026年 Billboard Hot 100 長期冠軍）", exclude: ["EDM drop","trap 808s","screaming","robotic autotune"], why: "鄉村樂靠吉他、敘事與真實人聲，電音落下與機器人音高修正會走調。" },
+
+  // Mood
+  { id: "nostalgic", el: "mood", tag: "nostalgic", zh: "懷舊。像想起舊照片或舊街道，溫暖但帶一點距離。", songs: "孫燕姿〈開始懂了〉、The 1975〈About You〉", exclude: ["festival drop","chipmunk vocals"], why: "懷舊需要時間感與餘韻，節慶落下或花栗鼠音高會把回憶感冲淡。" },
+  { id: "hopeful", el: "mood", tag: "hopeful", zh: "懷抱希望。可以從低處慢慢打開，而不是一開始就很亮。", songs: "梁靜茹〈勇氣〉、Coldplay〈Fix You〉", exclude: ["funeral dirge","screamed vocals","gloomy drone"], why: "希望感應該能抬升，葬禮進行曲或全程陰暗持續低音會把它壓住。" },
+  { id: "intimate", el: "mood", tag: "intimate", zh: "親密。像對一個人近距離說話，適合氣聲與近麥克風。", songs: "Billie Eilish〈i love you〉、Olivia Dean〈Dive〉", exclude: ["aggressive drums","stadium crowd","screaming"], why: "親密感應該靠近、收著，場館人聲與攻擊性鼓會把距離拉遠。" },
+  { id: "melancholic", el: "mood", tag: "melancholic", zh: "憂鬱但不絕望，旋律帶一點下沉。", songs: "Adele〈Someone Like You〉、林俊傑〈可惜沒如果〉", exclude: ["party horns","festival drop","chipmunk vocals"], why: "憂鬱需要克制，派對喇叭與花栗鼠音效會把情緒打斷。" },
+  { id: "cinematic", el: "mood", tag: "cinematic", zh: "電影感。空間大、畫面清楚，常用弦樂或寬混響托住。", songs: "Billie Eilish〈No Time To Die〉、周深〈化身孤島的鯨〉", exclude: ["lo-fi hiss","joke vocals","tinny demo sound"], why: "電影感要完整的空間與層次，玩笑人聲或錫薄小樣音質會破功。" },
+  { id: "night-drive", el: "mood", tag: "night-drive mood", zh: "夜間開車。合成器流動、低音穩定，像城市燈火從窗邊擦過。", songs: "The Weeknd〈Blinding Lights〉", exclude: ["acoustic campfire","polka","opera"], why: "夜車氣氛靠流動合成器與穩定低音，營火原音或歌劇會換到另一個場景。" },
+  { id: "tender", el: "mood", tag: "tender", zh: "溫柔。力道收住，不催、不吼，適合安撫式主歌。", songs: "Sam Smith〈Stay With Me〉、Olivia Dean〈The Hardest Part〉", exclude: ["heavy metal","distortion","hardstyle"], why: "溫柔要收力，失真與硬派電子會把語氣推得太兇。" },
+  { id: "dreamy", el: "mood", tag: "dreamy", zh: "夢幻、飄。殘響可以長一點，邊緣不必太銳。", songs: "Beach House〈Space Song〉、Lana Del Rey〈Video Games〉", exclude: ["aggressive drums","distortion","harsh clipping"], why: "夢幻靠柔邊與殘響，刺耳削波與攻擊性鼓會把霧氣驅散。" },
+  { id: "romantic", el: "mood", tag: "romantic", zh: "浪漫。可以甜，但最好有真實的溫度，而不是空泛的漂亮。", songs: "Crush〈Beautiful〉、周杰倫〈晴天〉", exclude: ["screaming","horror drones","death metal"], why: "浪漫需要溫度與旋律，驚悚持續低音與嘶吼會把感情線拉斷。" },
+  { id: "late-night", el: "mood", tag: "late-night city lights", zh: "深夜城市燈火。比 night-drive 更慢、更近，像收工後的街道。", songs: "Heize〈You, Clouds, Rain〉、The Weeknd〈Die For You〉", exclude: ["morning kids choir","festival drop","military snare"], why: "深夜城市要低螢幕亮度的感覺，兒童合唱或軍鼓會把時段走鐘。" },
+  { id: "dawn", el: "mood", tag: "dawn atmosphere", zh: "黎明、日出前。光是慢慢亮的，不是正午的大太陽。很適合 HANA 北塔日出。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones","aggressive drums"], why: "黎明要緩慢變亮，夜店熱曲或驚悚低音會把天亮的過程打斷。" },
+  { id: "night-rain", el: "mood", tag: "night rain atmosphere", zh: "夜雨。潮濕、安靜，音符之間要留得住水氣。", songs: "Heize〈You, Clouds, Rain〉、楊丞琳〈雨愛〉", exclude: ["dry stadium mix","party horns","hardstyle"], why: "夜雨需要潮濕空間感，乾燥場館混音與派對喇叭會把雨氣蒸乾。" },
+
+  // Tempo
+  { id: "tempo-72", el: "tempo", tag: "slow tempo around 72 BPM", zh: "慢板抒情。適合氣聲、鋼琴與留白。BPM 是大約值。", songs: "Adele〈Easy On Me〉（約 73 BPM）、Bruno Mars〈When I Was Your Man〉（約 73 BPM）", exclude: ["hardstyle kick","speed rap"], why: "慢板要呼吸空間，硬派踢鼓與快速說唱會把速度往上扯。" },
+  { id: "tempo-80", el: "tempo", tag: "slow ballad around 80 BPM", zh: "略快於極慢抒情，仍以人聲與和弦推動。", songs: "Billie Eilish〈when the party's over〉（約 83 BPM）", exclude: ["EDM drop","double-time hats"], why: "慢抒情不需要雙倍速踩鑔或電音落下。" },
+  { id: "tempo-90", el: "tempo", tag: "mid-tempo around 90 BPM", zh: "中慢板。R&B 與夢幻流行都很常用，身體會輕輕擺，但不必跳舞。", songs: "SZA〈Kill Bill〉（約 89 BPM）", exclude: ["hardstyle kick","drill hats"], why: "中慢板 R&B 的擺動會被硬派踢鼓或 drill 踩鑔打斷。" },
+  { id: "tempo-95", el: "tempo", tag: "mid-tempo around 95 BPM", zh: "經典中板。主歌可以收，副歌有空間往上推。", songs: "適合韓系 R&B 與夢幻流行的中板慣性速度（BPM 為約值）", exclude: ["funeral dirge","hardstyle kick"], why: "中板要能走路也能唱歌，葬禮速度或硬派踢鼓都會走偏。" },
+  { id: "tempo-100", el: "tempo", tag: "around 100 BPM, laid-back groove", zh: "從容的中板律動，英式靈魂、柔派 R&B 常用。", songs: "Beyoncé〈Crazy in Love〉（約 100 BPM，律動更亮；柔派可把力道收住）", exclude: ["breakbeat rush","speed rap"], why: "從容律動怕被加速碎拍或快速說唱帶走。" },
+  { id: "tempo-115", el: "tempo", tag: "around 115 BPM", zh: "偏俏的中快板，律動更明顯，仍可保留人聲溫度。", songs: "Mark Ronson, Bruno Mars〈Uptown Funk〉（約 115 BPM）", exclude: ["funeral dirge","drone ambient only"], why: "這個速度需要身體感，純持續低音或葬禮速度會把它拖住。" },
+  { id: "tempo-124", el: "tempo", tag: "dance groove around 124 BPM", zh: "舞曲中板。若要做 A2O 那類電音舞曲才需要；HANA 抒情主線通常較慢。", songs: "Dua Lipa〈Don't Start Now〉（約 124 BPM）", exclude: ["rubato free time","funeral dirge"], why: "舞曲律動需要穩定節拍，自由速度會讓鼓組站不穩。" },
+  { id: "tempo-170", el: "tempo", tag: "uptempo around 170 BPM", zh: "快板或帶半拍感的夜車流行。不一定要聽起來像拼命趕路。", songs: "The Weeknd〈Blinding Lights〉（約 171 BPM）", exclude: ["sluggish dirge","lo-fi tape drag"], why: "快板夜車流行需要向前推的脈衝，拖拍或葬禮速度會把它踩煞車。" },
+  { id: "half-time", el: "tempo", tag: "half-time feel", zh: "半拍感。表面可以較慢、鼓點落在大格上，適合 R&B 與另類流行。", songs: "常見於當代 R&B 副歌的重量感處理", exclude: ["constant sixteenth hats"], why: "半拍感靠疏落的重拍，連續十六分音踩鑔會把它填滿。" },
+
+  // Instruments
+  { id: "piano", el: "instruments", tag: "soft piano lead", zh: "柔和鋼琴主奏，帶和弦與簡單過門，讓人聲走在前面。", songs: "Adele〈Easy On Me〉、林俊傑〈修煉愛情〉", exclude: ["heavy metal guitar","distortion"], why: "柔鋼琴要清、要有空間，失真吉他會蓋過鍵盤的細節。" },
+  { id: "guzheng", el: "instruments", tag: "guzheng countermelody", zh: "古箏作對位旋律，不要當背景音效掃過就算了。", songs: "周杰倫〈蘭亭序〉、〈青花瓷〉（中國風編曲對照）", exclude: ["trap hi-hats","808 bass","EDM drop"], why: "古箏的余音需要空間，陷阱鼓與 808 會蓋過撥弦。" },
+  { id: "erhu", el: "instruments", tag: "erhu countermelody", zh: "二胡對位。適合在主歌尾或副歌加一句回應人聲。", songs: "周杰倫〈東風破〉、〈千里之外〉", exclude: ["trap hi-hats","EDM drop","heavy metal"], why: "二胡是接近人聲的旋律樂器，重型編制會把它淹没。" },
+  { id: "pipa", el: "instruments", tag: "pipa lead", zh: "琵琶主奏或引子。顆粒清楚，可與現代人聲對照。", songs: "周杰倫〈青花瓷〉", exclude: ["distortion","trap 808s","aggressive drums"], why: "琵琶的顆粒與滾奏怕被失真和重鼓蓋掉。" },
+  { id: "pads", el: "instruments", tag: "airy synth pads underneath", zh: "空氣感合成器鋪在底下，不要搶主旋律。", songs: "Beach House〈Space Song〉、The 1975〈About You〉", exclude: ["distortion","harsh saw leads"], why: "鋪底要薄而亮，刺耳鋸齒主奏會把霧氣撕開。" },
+  { id: "analog-bass", el: "instruments", tag: "warm analog bass", zh: "溫暖類比低音，圓、穩，托住律動而不轟頭。", songs: "Daft Punk〈Get Lucky〉、The Weeknd〈Blinding Lights〉", exclude: ["distortion bass grind","metal guitar chugs"], why: "溫暖低音要圓，碾磨失真低音與金屬悶音會把它撕破。" },
+  { id: "rhodes", el: "instruments", tag: "vintage electric piano", zh: "復古電鋼琴（Rhodes 類音色），英式靈魂與深夜 R&B 的核心觸感。", songs: "Olivia Dean〈Dive〉、Norah Jones〈Don't Know Why〉", exclude: ["EDM supersaw","heavy metal"], why: "復古電鋼琴的顫音與溫度會被大鋸齒合成器蓋掉。" },
+  { id: "brushed", el: "instruments", tag: "brushed drums", zh: "束棒鼓，沙沙的、輕的，適合親密中板。", songs: "Norah Jones〈Don't Know Why〉", exclude: ["aggressive drums","trap hi-hats","hardstyle kick"], why: "束棒鼓的細碎質地最怕被攻擊性鼓組或硬派踢鼓取代。" },
+  { id: "strings", el: "instruments", tag: "sparse strings", zh: "稀疏弦樂。一兩條線就夠，不要做成整隊交響轟炸。", songs: "Adele〈Someone Like You〉、周深〈化身孤島的鯨〉", exclude: ["film trailer brass hits","EDM drop"], why: "稀疏弦樂靠克制，預告片銅管重擊會把細線打斷。" },
+  { id: "acoustic", el: "instruments", tag: "acoustic guitar", zh: "木吉他。可作指彈過門或輕掃和弦，適合柔抒情。", songs: "陳綺貞〈旅行的意義〉、Ed Sheeran〈Perfect〉", exclude: ["distortion","metal guitar","EDM drop"], why: "木吉他的身體共鳴怕被失真與電音落下蓋掉。" },
+  { id: "arp", el: "instruments", tag: "analog synth arpeggio", zh: "類比合成器分解和弦，適合迷幻或夜車氣氛，當裝飾而非全程主導。", songs: "Tame Impala〈The Less I Know The Better〉", exclude: ["acoustic campfire folk","opera choir"], why: "琶音合成器的迷幻循環會被營火民謠或歌劇合唱換走場景。" },
+
+  // Vocals
+  { id: "breathy", el: "vocals", tag: "breathy female vocal", zh: "氣聲女聲。氣比力多，靠近麥克風，是 HANA 最核心的聲音。", songs: "Billie Eilish〈ocean eyes〉、王菲〈傳奇〉", exclude: ["male vocal","rap","screaming","autotune"], why: "氣聲女聲要保留呼吸與口形，男聲、說唱、嘶吼或重自動調音會換掉這條聲線。" },
+  { id: "close-mic", el: "vocals", tag: "close-mic, intimate", zh: "近麥克風、親密。能聽到氣口與唇齒，空間感不要太大。", songs: "Billie Eilish〈when the party's over〉、Norah Jones〈Don't Know Why〉", exclude: ["stadium reverb","screaming","male vocal"], why: "近講怕大空間殘響和遠距離喊唱，會把嘴唇前的距離拉開。" },
+  { id: "stacked", el: "vocals", tag: "stacked harmonies in chorus", zh: "副歌疊和聲。主歌可以單聲，副歌再打開層次。", songs: "Ariana Grande〈God is a woman〉、ABBA〈Dancing Queen〉", exclude: ["monotone chant","screaming"], why: "疊和聲要音準與層次，單調念白或嘶吼會把和聲牆拆掉。" },
+  { id: "soft-female", el: "vocals", tag: "soft female vocal", zh: "柔軟女聲。不必全程氣聲，但力道仍收著，咬字清楚。", songs: "Olivia Dean〈The Hardest Part〉、IU〈밤편지 / Through the Night〉", exclude: ["male vocal","screaming","rap"], why: "柔女聲與男聲主唱、嘶吼或說唱段落容易互相搶主導權。" },
+  { id: "airy-whisper", el: "vocals", tag: "airy whisper lead", zh: "氣音耳語主唱。只建議用在主歌或橋段，副歌仍可稍微打開。", songs: "Billie Eilish〈ocean eyes〉、王菲〈天空〉", exclude: ["belting throughout","screaming","autotune"], why: "耳語主唱怕整首吼唱或重自動調音，氣音細節會消失。" },
+  { id: "belting", el: "vocals", tag: "powerful belting chorus", zh: "副歌開放聲。主歌仍可氣聲，到副歌再把聲音打開。李佳薇路線。", songs: "李佳薇〈甲乙丙丁〉、Adele〈Rolling in the Deep〉、張惠妹〈聽海〉", exclude: ["whisper only throughout","muffled lo-fi vocal"], why: "副歌開放聲需要清晰的中高頻，全程耳語或悶濁 lo-fi 人聲會讓它使不上力。" },
+  { id: "falsetto", el: "vocals", tag: "layered falsetto", zh: "疊層假音。可用在副歌尾或和聲裡，增加夜色。", songs: "The Weeknd〈Die For You〉、Crush〈Beautiful〉", exclude: ["screaming","talk-rap verses"], why: "假音層要純、要亮，嘶吼或談話式說唱會把那層撕掉。" },
+
+  // Structure
+  { id: "intimate-soar", el: "structure", tag: "intimate verse, soaring chorus", zh: "主歌親密收著，副歌向上打開。最通用的流行起伏。", songs: "Adele〈Someone Like You〉、林俊傑〈修煉愛情〉", exclude: ["flat dynamics throughout"], why: "這種結構靠對比，全程平的動態會讓副歌站不起來。" },
+  { id: "build", el: "structure", tag: "quiet verse building to a soaring chorus", zh: "主歌更靜，預副歌開始堆，副歌才真正釋放。", songs: "Coldplay〈Fix You〉、Billie Eilish〈Happier Than Ever〉", exclude: ["maximum loudness from the start"], why: "堆疊需要從低處開始，一開頭就最大聲就沒有旅程。" },
+  { id: "bridge", el: "structure", tag: "stripped-down bridge", zh: "橋段抽掉大部分樂器，只留人聲與一件主奏，再回到副歌。", songs: "Adele〈Hello〉、Taylor Swift〈All Too Well〉", exclude: ["constant wall of sound"], why: "橋段的留白需要把牆拆掉，全程聲牆會讓橋段不存在。" },
+  { id: "radio-chorus", el: "structure", tag: "radio-ready chorus", zh: "副歌要讓人一遍就記得，旋律鉤子清楚，層次夠亮。", songs: "Dua Lipa〈Don't Start Now〉、IU〈Blueming〉", exclude: ["formless jam","mumbled hook"], why: "電台副歌要好記，沒有形狀的即興或含糊鉤子會讓副歌散掉。" },
+  { id: "instrumental-break", el: "structure", tag: "instrumental break", zh: "器樂過門。可讓古箏、吉他或合成器說一句話，再接人聲。", songs: "周杰倫〈晴天〉、Coldplay〈Clocks〉", exclude: ["vocals without pause"], why: "器樂過門需要人聲讓路，全程不停唱就插不進去。" },
+  { id: "fade-outro", el: "structure", tag: "fade-out outro", zh: "淡出收尾。適合把黎明或夜色慢慢收掉，而不是突然切斷。", songs: "The Beatles〈Hey Jude〉", exclude: ["abrupt hard cut ending","screaming outro"], why: "淡出需要時間把氣氛收掉，硬切或嘶吼結尾會把余韻剪斷。" },
+  { id: "pre-chorus", el: "structure", tag: "pre-chorus lift", zh: "預副歌上推。K-Pop 與華語流行都很常用，讓副歌進來前先換一口氣。", songs: "IU〈Blueming〉、IU〈Good Day〉", exclude: ["verse straight into drop"], why: "預副歌是上台階，主歌直接進 drop 會少一級推進。" },
+
+  // Production
+  { id: "warm-analog", el: "production", tag: "warm analog mix", zh: "溫暖類比混音。中低頻圓、高頻不刺，像類比設備的溫度。", songs: "Daft Punk〈Get Lucky〉、Olivia Dean〈Dive〉", exclude: ["harsh digital clipping","tinny demo sound"], why: "類比溫度怕刺耳削波與錫薄小樣音質。" },
+  { id: "wide-reverb", el: "production", tag: "wide reverb", zh: "寬混響。讓人聲與鋪底有空間，但主唱仍可相對靠前。", songs: "Beach House〈Space Song〉、Lana Del Rey〈Video Games〉", exclude: ["bone-dry mix","tiny phone speaker sound"], why: "寬混響需要空間，骨幹乾燥混音會把廳堂拿掉。" },
+  { id: "cinematic-mix", el: "production", tag: "cinematic, modern polish", zh: "電影感又現代的完成度。層次清楚，像發行規格，而不是寫「professional」。", songs: "Billie Eilish〈No Time To Die〉", exclude: ["lo-fi hiss","bedroom demo noise"], why: "電影規格的完成度與故意的bedroom噪音是相反方向。" },
+  { id: "modern-mix", el: "production", tag: "modern mix", zh: "現代混音。人聲清楚、低音有控制、左右有寬度。", songs: "Dua Lipa〈Don't Start Now〉、IU〈Blueming〉", exclude: ["muddy mix","lo-fi hiss"], why: "現代混音要清晰的層次，混濁或磁帶噪會把它拉回小樣。" },
+  { id: "dawn-prod", el: "production", tag: "dawn atmosphere", zh: "黎明空間。高頻可以慢慢打開，殘響偏柔，像天色剛亮。", songs: "Norah Jones〈Sunrise〉", exclude: ["nightclub banger","horror drones"], why: "黎明空間與夜店熱曲、驚悚低音場景相反。" },
+  { id: "rain-prod", el: "production", tag: "night rain atmosphere", zh: "夜雨混音。潮濕、微暗，高頻不要太亮。", songs: "Heize〈You, Clouds, Rain〉", exclude: ["dry stadium mix","festival drop"], why: "潮濕夜雨怕乾燥場館混音和節慶落下。" },
+  { id: "dry-vocal", el: "production", tag: "intimate dry vocal", zh: "人聲較乾、很近。殘響留給伴奏，主唱像在耳邊。", songs: "Billie Eilish〈when the party's over〉", exclude: ["cavernous vocal reverb","stadium delay"], why: "近而乾的人聲怕洞穴殘響與場館延遲，會把嘴巴拉遠。" },
+  { id: "warm-cinematic", el: "production", tag: "warm cinematic mix", zh: "溫暖電影混音。有畫面，但不冷、不空，適合日出收尾。", songs: "周深〈化身孤島的鯨〉、Adele〈Easy On Me〉", exclude: ["cold metallic mix","glitchy artifacts"], why: "溫暖電影感怕冰冷金屬質地與故障顆粒。" },
+
+  // Lyrics tags (community convention)
+  { id: "tag-verse", el: "lyrics", tag: "[Verse]", zh: "主歌。獨立一行，寫在該段歌詞上方。社群慣例，非官方語法。", songs: "結構對照：Adele、IU、周杰倫等流行歌的主歌段落", exclude: [], why: "" },
+  { id: "tag-pre", el: "lyrics", tag: "[Pre-Chorus]", zh: "預副歌。用來上台階，讓副歌進來前先換氣。", songs: "結構對照：IU〈Blueming〉、多數 K-Pop 編排", exclude: [], why: "" },
+  { id: "tag-chorus", el: "lyrics", tag: "[Chorus]", zh: "副歌。重複出現時，歌詞要用一模一樣的字，hook 才唱得穩。", songs: "結構對照：Dua Lipa〈Don't Start Now〉、ABBA〈Dancing Queen〉", exclude: [], why: "" },
+  { id: "tag-bridge", el: "lyrics", tag: "[Bridge]", zh: "橋段。通常只出現一次，旋律或觀點換一下，再回到副歌。", songs: "結構對照：Adele〈Hello〉、Taylor Swift〈All Too Well〉", exclude: [], why: "" },
+  { id: "tag-inst", el: "lyrics", tag: "[Instrumental]", zh: "器樂段。歌詞欄不要在這裡寫長篇製作說明，否則可能被唱出來。", songs: "結構對照：Coldplay〈Clocks〉、周杰倫〈晴天〉過門", exclude: [], why: "" },
+  { id: "tag-outro", el: "lyrics", tag: "[Outro]", zh: "尾奏。可接淡出，或留一句收束。", songs: "結構對照：The Beatles〈Hey Jude〉淡出", exclude: [], why: "" },
+
+  // Extra exclude nouns for the exclude section (selectable)
+  { id: "ex-male", el: "exclude", tag: "male vocal", zh: "排除男聲。做 HANA 時幾乎都要加。", songs: "—", exclude: [], why: "避免主唱性別被換成男聲。" },
+  { id: "ex-rap", el: "exclude", tag: "rap", zh: "排除說唱段落。", songs: "—", exclude: [], why: "避免副歌前後突然出現 rap verse。" },
+  { id: "ex-auto", el: "exclude", tag: "autotune", zh: "排除明顯自動調音／機器人音高。", songs: "—", exclude: [], why: "氣聲與親密人聲通常不要硬邊 autotune。" },
+  { id: "ex-drums", el: "exclude", tag: "heavy drums", zh: "排除重鼓。", songs: "—", exclude: [], why: "抒情與夢幻路線需要把鼓的重量壓下來。" },
+  { id: "ex-edm", el: "exclude", tag: "EDM drop", zh: "排除電音落下。", songs: "—", exclude: [], why: "避免副歌突然變成舞曲 drop。" },
+  { id: "ex-dist", el: "exclude", tag: "distortion", zh: "排除失真。", songs: "—", exclude: [], why: "保護氣聲、古箏、鋼琴等細音色。" },
+  { id: "ex-rock", el: "exclude", tag: "rock guitar", zh: "排除搖滾電吉他。", songs: "—", exclude: [], why: "避免把東方或夢幻編制換成樂隊搖滾。" },
+  { id: "ex-scream", el: "exclude", tag: "screaming", zh: "排除嘶吼。", songs: "—", exclude: [], why: "與氣聲女聲完全相反。" },
+  { id: "ex-hats", el: "exclude", tag: "trap hi-hats", zh: "排除陷阱踩鑔。", songs: "—", exclude: [], why: "保護華語抒情與東方樂器的留白。" },
+  { id: "ex-808", el: "exclude", tag: "808 bass", zh: "排除 808 重低音。", songs: "—", exclude: [], why: "避免蓋過古箏、二胡與柔鋼琴。" },
+  { id: "ex-metal", el: "exclude", tag: "heavy metal", zh: "排除重金屬。", songs: "—", exclude: [], why: "與 HANA 的夢幻、韓系 R&B、東方抒情都衝突。" },
+  { id: "ex-hardstyle", el: "exclude", tag: "hardstyle", zh: "排除 hardstyle 硬派電音。", songs: "—", exclude: [], why: "踢鼓過硬，不適合中板靈魂或抒情。" }
+];
+
+const COMBOS = [
+  {
+    id: "combo-dreampop-rnb",
+    title: "夢幻流行 × 韓系 R&B",
+    style: "Dream pop, contemporary R&B, K-pop, breathy female vocals, airy synth pads underneath, warm analog bass, mid-tempo around 95 BPM, intimate verse, soaring chorus with stacked harmonies, cinematic night-drive mood",
+    exclude: "heavy metal, distortion, rap, aggressive drums, EDM drop, screaming, male vocal",
+    note: "兩邊的交集：夢幻合成器、氣聲、有大高潮的副歌。接近全站熱門的 Indie / Art Pop，也接近你帳號裡較受歡迎的韓系抒情。"
+  },
+  {
+    id: "combo-mando-oriental",
+    title: "華語抒情 × 東方樂器",
+    style: "Mandopop ballad, guzheng countermelody, erhu countermelody, soft piano lead, sparse strings, dreamy breathy female vocal, slow tempo around 72 BPM, emotional and cinematic, night rain atmosphere, modern mix",
+    exclude: "trap hi-hats, EDM drop, heavy metal, rap, 808 bass, autotune, male vocal",
+    note: "對應你較受歡迎的東方風抒情，例如〈墨下仕女圖〉那條線。樂器要寫出對位，而不是只列古箏二胡。"
+  },
+  {
+    id: "combo-uk-krnb",
+    title: "英式靈魂 × 韓系 R&B",
+    style: "Soul pop, alternative R&B, UK soul, soft female vocal, vintage electric piano, brushed drums, warm analog bass, around 100 BPM, laid-back groove, tender, late-night city lights, rich harmonies, radio-ready chorus",
+    exclude: "death metal, screaming, trap 808s, hardstyle, EDM drop, rap, distortion, male vocal",
+    note: "對應 2026年11月英國榜偏多的溫暖中板靈魂流行，再拉回你熟悉的韓系 R&B。"
+  },
+  {
+    id: "combo-hana-dawn",
+    title: "HANA 黎明示例",
+    style: "Dream pop ballad, contemporary R&B, nostalgic and hopeful, mid-tempo around 90 BPM, soft piano lead, guzheng countermelody, airy synth pads underneath, breathy female vocal, close-mic, intimate, quiet verse building to a soaring chorus with stacked harmonies, warm cinematic mix, dawn atmosphere",
+    exclude: "heavy metal, distortion, rap, aggressive drums, EDM drop, male vocal, screaming, trap hi-hats",
+    note: "專為 HANA 日出段落：氣聲近講、柔鋼琴與古箏對位，主歌收、副歌開，黎明慢慢亮起來。"
+  }
+];
+
+const SLIDERS = [
+  { title: "Variety = 0", body: "想完整保留你寫的風格標籤，就把 Variety 調到 0。數值愈高，Suno 愈會改寫你的提示詞。" },
+  { title: "Style Influence", body: "控制結果要多貼近你的風格描述。愈高愈跟手，愈低愈容易跑出去。" },
+  { title: "Weirdness 50%", body: "控制有多出乎意料。50% 是一般、比較穩的結果；要怪一點再往上調。" },
+  { title: "Max Mode", body: "比較耗點數。適合兩分鐘以上，或需要整首人人聲比較一致的時候。" }
+];
+
+const state = {
+  filter: "all",
+  query: "",
+  styleIds: [],
+  excludes: [],
+  warnings: []
+};
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+
+function wordBoundaryHas(hay, needle) {
+  const h = String(hay).toLowerCase();
+  const n = String(needle).toLowerCase().trim();
+  if (!n) return false;
+  const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp("(^|[^a-z0-9+])" + escaped + "([^a-z0-9+]|$)", "i");
+  return re.test(h);
+}
+
+function conflicts(styleTag, excludeTag) {
+  return wordBoundaryHas(styleTag, excludeTag) || wordBoundaryHas(excludeTag, styleTag);
+}
+
+function optionById(id) { return OPTIONS.find(o => o.id === id); }
+
+function styleString() {
+  const items = state.styleIds.map(optionById).filter(Boolean)
+    .sort((a, b) => {
+      const ea = ELEMENTS.find(e => e.id === a.el)?.order ?? 99;
+      const eb = ELEMENTS.find(e => e.id === b.el)?.order ?? 99;
+      if (ea !== eb) return ea - eb;
+      return state.styleIds.indexOf(a.id) - state.styleIds.indexOf(b.id);
+    });
+  return items.map(i => i.tag).join(", ");
+}
+
+function excludeString() { return state.excludes.join(", "); }
+
+function selectedStyleTags() {
+  return state.styleIds.map(optionById).filter(Boolean).map(o => o.tag);
+}
+
+function addExcludes(list, { silent = false } = {}) {
+  const msgs = [];
+  const styles = selectedStyleTags();
+  list.forEach(raw => {
+    const tag = String(raw).trim();
+    if (!tag) return;
+    if (state.excludes.some(x => x.toLowerCase() === tag.toLowerCase())) return;
+    const hit = styles.find(s => conflicts(s, tag));
+    if (hit) {
+      msgs.push("已略過 Exclude「" + tag + "」，因為與風格標籤「" + hit + "」衝突。");
+      return;
+    }
+    state.excludes.push(tag);
+  });
+  if (!silent && msgs.length) state.warnings = msgs.concat(state.warnings).slice(0, 8);
+  return msgs;
+}
+
+function addStyle(id) {
+  const opt = optionById(id);
+  if (!opt) return;
+  if (opt.el === "exclude") {
+    const msgs = addExcludes([opt.tag]);
+    if (!msgs.length) state.warnings = [];
+    persist(); renderBuilder();
+    return;
+  }
+  if (opt.el === "lyrics") {
+    copyText(opt.tag, "已複製歌詞標籤 " + opt.tag + "。這類標籤請貼進歌詞欄，不會加入風格欄。");
+    return;
+  }
+  if (state.styleIds.includes(id)) return;
+  state.customStyle = "";
+  state.styleIds.push(id);
+  const removed = [];
+  state.excludes = state.excludes.filter(ex => {
+    if (conflicts(opt.tag, ex)) { removed.push(ex); return false; }
+    return true;
+  });
+  const msgs = [];
+  if (removed.length) msgs.push("已從 Exclude 移除與「" + opt.tag + "」衝突的：" + removed.join("、") + "。");
+  const skipped = addExcludes(opt.exclude || [], { silent: true });
+  state.warnings = msgs.concat(skipped).slice(0, 8);
+  persist(); renderBuilder();
+}
+
+function removeStyle(id) {
+  state.styleIds = state.styleIds.filter(x => x !== id);
+  persist(); renderBuilder();
+}
+
+function removeExclude(tag) {
+  state.excludes = state.excludes.filter(x => x !== tag);
+  persist(); renderBuilder();
+}
+
+function applyCombo(combo) {
+  state.styleIds = [];
+  state.excludes = [];
+  state.warnings = [];
+  const parts = combo.style.split(",").map(s => s.trim()).filter(Boolean);
+  parts.forEach(part => {
+    const found = OPTIONS.find(o => o.el !== "exclude" && o.el !== "lyrics" && o.tag.toLowerCase() === part.toLowerCase());
+    if (found && !state.styleIds.includes(found.id)) state.styleIds.push(found.id);
+    else {
+      const loose = OPTIONS.find(o => o.el !== "exclude" && o.el !== "lyrics" && (part.toLowerCase().includes(o.tag.toLowerCase()) || o.tag.toLowerCase().includes(part.toLowerCase())));
+      if (loose && !state.styleIds.includes(loose.id)) state.styleIds.push(loose.id);
+    }
+  });
+  if (!state.styleIds.length) {
+    // Keep free text if mapping failed: store as a virtual string via excludes? Better: custom field.
+  }
+  state.customStyle = combo.style;
+  addExcludes(combo.exclude.split(",").map(s => s.trim()).filter(Boolean));
+  persist(); renderBuilder();
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      styleIds: state.styleIds,
+      excludes: state.excludes,
+      customStyle: state.customStyle || "",
+      filter: state.filter,
+      query: state.query
+    }));
+  } catch (e) {}
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.styleIds)) state.styleIds = data.styleIds.filter(id => optionById(id));
+    if (Array.isArray(data.excludes)) state.excludes = data.excludes;
+    if (typeof data.customStyle === "string") state.customStyle = data.customStyle;
+    if (typeof data.filter === "string") state.filter = data.filter;
+    if (typeof data.query === "string") state.query = data.query;
+  } catch (e) {}
+}
+
+function copyText(text, msg) {
+  const done = () => {
+    const el = document.getElementById("styleCopied");
+    const el2 = document.getElementById("exCopied");
+    if (el) el.textContent = msg || "已複製。";
+    if (el2 && msg && msg.indexOf("Exclude") >= 0) el2.textContent = msg;
+    setTimeout(() => { if (el) el.textContent = ""; if (el2) el2.textContent = ""; }, 2200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta); done();
+}
+
+function matchesQuery(opt, q) {
+  if (!q) return true;
+  const hay = [opt.tag, opt.zh, opt.songs, (opt.exclude||[]).join(" "), opt.why || ""].join(" ").toLowerCase();
+  return hay.includes(q);
+}
+
+function renderChips() {
+  const box = document.getElementById("elementChips");
+  const items = [{ id: "all", name: "全部" }].concat(ELEMENTS);
+  box.innerHTML = items.map(e => '<button type="button" class="chip' + (state.filter === e.id ? " active" : "") + '" data-filter="' + e.id + '" aria-pressed="' + (state.filter === e.id) + '">' + escapeHtml(e.name) + "</button>").join("");
+}
+
+function renderMain() {
+  const main = document.getElementById("main");
+  const q = state.query.trim().toLowerCase();
+  const parts = [];
+
+  parts.push(renderCombos());
+
+  ELEMENTS.forEach(el => {
+    if (state.filter !== "all" && state.filter !== el.id) return;
+    if (el.id === "sliders") {
+      if (q && !("滑桿 variety weirdness influence max mode".includes(q) || el.name.toLowerCase().includes(q))) return;
+      parts.push(renderSliders(el));
+      return;
+    }
+    const rows = OPTIONS.filter(o => o.el === el.id && matchesQuery(o, q));
+    if (!rows.length && q) return;
+    parts.push(renderTable(el, rows));
+  });
+
+  if (state.filter === "all" || state.filter === "pairing") {
+    parts.push(renderPairing(q));
+  }
+
+  main.innerHTML = parts.join("") || '<p class="empty">沒有符合的項目，試著清空搜尋或換一個分類。</p>';
+}
+
+function renderCombos() {
+  if (state.filter !== "all") return "";
+  if (state.query && !COMBOS.some(c => (c.title + c.style + c.exclude + c.note).toLowerCase().includes(state.query.trim().toLowerCase()))) return "";
+  return '<section class="block" id="combos"><div class="kicker">Ready-made</div><h2>現成組合</h2><p class="hint">三組趨勢組合，加上一組 HANA 黎明示例。按「套用」會取代目前組合器中的風格與 Exclude。</p>' +
+    COMBOS.map(c => '<div class="combo"><h3>' + escapeHtml(c.title) + '</h3><p class="hint" style="margin:0 0 6px">' + escapeHtml(c.note) + '</p><div class="kicker">Style</div><pre class="box" style="min-height:0">' + escapeHtml(c.style) + '</pre><div class="kicker">Exclude</div><pre class="box" style="min-height:0">' + escapeHtml(c.exclude) + '</pre><div class="actions"><button class="primary tiny" type="button" data-combo="' + c.id + '">套用此組合</button><button class="tiny" type="button" data-copy-combo="' + c.id + '">複製兩欄</button></div></div>').join("") +
+    "</section>";
+}
+
+function renderTable(el, rows) {
+  let html = '<section class="block" id="' + el.id + '"><div class="kicker">Element</div><h2>' + escapeHtml(el.name) + "</h2><p class=\"hint\">" + escapeHtml(el.blurb) + "</p>";
+  if (el.id === "lyrics") {
+    html += '<p class="hint">點「複製」即可把標籤貼進歌詞欄。範例如下：</p><pre class="box">[Verse]\n街燈還亮著，我走在你後面\n\n[Pre-Chorus]\n再靠近一點就好\n\n[Chorus]\n我想在日出以前把話唱完\n\n[Bridge]\n[Instrumental]\n\n[Chorus]\n我想在日出以前把話唱完\n\n[Outro]</pre>';
+  }
+  if (!rows.length) {
+    html += '<p class="empty">這個分類目前沒有符合搜尋的列。</p></section>';
+    return html;
+  }
+  const isEx = el.id === "exclude";
+  html += "<div class=\"card\" style=\"overflow:auto\"><table><thead><tr><th>加入</th><th>英文標籤</th><th>中文說明</th><th>代表歌曲</th>" + (isEx ? "" : "<th>Exclude 配對</th>") + "</tr></thead><tbody>";
+  rows.forEach(o => {
+    const added = isEx ? state.excludes.some(x => x.toLowerCase() === o.tag.toLowerCase()) : state.styleIds.includes(o.id);
+    const btnLabel = isEx ? (added ? "已排除" : "加入排除") : (el.id === "lyrics" ? "複製" : (added ? "已加入" : "加入"));
+    html += "<tr><td><button class=\"tiny" + (added ? " primary" : "") + "\" type=\"button\" data-add=\"" + o.id + "\"" + (added && el.id !== "lyrics" ? " disabled" : "") + ">" + btnLabel + "</button></td>";
+    html += '<td class="tag-cell">' + escapeHtml(o.tag) + "</td>";
+    html += "<td>" + escapeHtml(o.zh) + "</td>";
+    html += '<td class="songs">' + escapeHtml(o.songs) + "</td>";
+    if (!isEx) {
+      if (o.exclude && o.exclude.length) {
+        html += '<td><div class="ex-tags">' + escapeHtml(o.exclude.join(", ")) + '</div><div class="why">' + escapeHtml(o.why || "") + "</div></td>";
+      } else {
+        html += '<td class="why">歌詞標籤不進 Exclude。</td>';
+      }
+    }
+    html += "</tr>";
+  });
+  html += "</tbody></table></div></section>";
+  return html;
+}
+
+function renderPairing(q) {
+  const rows = OPTIONS.filter(o => o.exclude && o.exclude.length && matchesQuery(o, q));
+  if (!rows.length) return "";
+  let html = '<section class="block" id="pairing"><div class="kicker">Pairing</div><h2>Exclude 配對總表</h2><p class="hint">風格或情緒、人聲等選項與建議排除項的對照。Exclude 只寫名詞，不要加 no。加入風格時會自動建議這些排除項，但不會加入會與已選風格衝突的詞。</p><div class="card" style="overflow:auto"><table><thead><tr><th>元素</th><th>風格標籤</th><th>建議 Exclude</th><th>原因</th></tr></thead><tbody>';
+  rows.forEach(o => {
+    const elName = ELEMENTS.find(e => e.id === o.el)?.name || o.el;
+    html += "<tr><td>" + escapeHtml(elName) + '</td><td class="tag-cell">' + escapeHtml(o.tag) + '</td><td class="ex-tags">' + escapeHtml(o.exclude.join(", ")) + '</td><td class="why">' + escapeHtml(o.why || "") + "</td></tr>";
+  });
+  html += "</tbody></table></div></section>";
+  return html;
+}
+
+function renderSliders(el) {
+  return '<section class="block" id="sliders"><div class="kicker">Sliders</div><h2>' + escapeHtml(el.name) + "</h2><p class=\"hint\">" + escapeHtml(el.blurb) + '</p><div class="slider-grid">' +
+    SLIDERS.map(s => '<div class="slider-card"><h3>' + escapeHtml(s.title) + "</h3><p class=\"hint\" style=\"margin:0\">" + escapeHtml(s.body) + "</p></div>").join("") +
+    "</div></section>";
+}
+
+function currentStyleOutput() {
+  const built = styleString();
+  if (state.customStyle && !built) return state.customStyle;
+  if (state.customStyle && built && state.customStyle.length > built.length) {
+    // If user applied a combo, prefer the exact combo string until they edit selection away
+    const combo = COMBOS.find(c => c.style === state.customStyle);
+    if (combo) return combo.style;
+  }
+  return built || state.customStyle || "";
+}
+
+function renderBuilder() {
+  const style = currentStyleOutput();
+  const ex = excludeString();
+  const n = style.length;
+  const count = document.getElementById("styleCount");
+  count.textContent = "風格欄 " + n + " / 約 " + STYLE_LIMIT + " 字元（第三方實測 v6 風格欄約 1000 字元，不是官方數字）";
+  count.className = "count" + (n > STYLE_LIMIT ? " over" : "");
+  document.getElementById("styleBox").value = style;
+  document.getElementById("exBox").value = ex;
+
+  document.getElementById("stylePills").innerHTML = state.styleIds.map(id => {
+    const o = optionById(id); if (!o) return "";
+    return '<span class="pill">' + escapeHtml(o.tag) + '<button type="button" data-del-style="' + id + '" aria-label="移除">×</button></span>';
+  }).join("") || '<span class="empty">還沒加入風格標籤。</span>';
+
+  document.getElementById("exPills").innerHTML = state.excludes.map(tag => {
+    return '<span class="pill ex">' + escapeHtml(tag) + '<button type="button" data-del-ex="' + encodeURIComponent(tag) + '" aria-label="移除">×</button></span>';
+  }).join("") || '<span class="empty">還沒有 Exclude。加入曲風後會自動建議。</span>';
+
+  const w = document.getElementById("warnings");
+  if (state.warnings.length) {
+    w.className = "warn-list show";
+    w.innerHTML = state.warnings.map(escapeHtml).join("<br>");
+  } else {
+    w.className = "warn-list";
+    w.innerHTML = "";
+  }
+}
+
+function renderFooter() {
+  document.getElementById("footer").innerHTML = '<section class="block"><h2 style="font-family:var(--serif);font-size:20px">資料來源與使用原則</h2><p>風格欄建議依序寫：曲風、情緒、速度與律動、樂器分工、人聲、結構起伏、製作質感。BPM 請用 around 寫法。Exclude 只寫名詞，不要在風格欄寫否定。歌詞欄的 <code>[Verse]</code> 等標籤是社群慣例，官方並未把它們列為正式語法。「120 字元」是舊版習慣，v6 風格欄較長；約 1000 字元來自第三方實測，不是官方上限。</p><p>來源：<a href="https://help.suno.com/en/articles/9010177">Suno 官方音樂詞彙表</a> · <a href="https://help.suno.com/en/articles/3161921">Exclude Styles 說明</a> · <a href="https://help.suno.com/en/articles/13924481">Suno v6 FAQ</a> · <a href="https://usesuno.com/guide/prompting/">usesuno 提示詞指南</a> · <a href="https://hookgenius.app/learn/suno-character-limits/">HookGenius 字元限制實測</a></p><p>代表歌曲都是確實存在的作品，用來讓你聽出該標籤的感覺；2026年11月榜單例子有標註來源區間。此頁可完全離線使用，組合器狀態會存在這個瀏覽器的 localStorage。</p></section>';
+}
+
+function onClick(ev) {
+  const t = ev.target.closest("[data-filter],[data-add],[data-del-style],[data-del-ex],[data-combo],[data-copy-combo]");
+  if (!t) return;
+  if (t.dataset.filter) { state.filter = t.dataset.filter; persist(); renderChips(); renderMain(); return; }
+  if (t.dataset.add) { addStyle(t.dataset.add); renderMain(); return; }
+  if (t.dataset.delStyle) { state.customStyle = ""; removeStyle(t.dataset.delStyle); renderMain(); return; }
+  if (t.dataset.delEx) { removeExclude(decodeURIComponent(t.dataset.delEx)); renderMain(); return; }
+  if (t.dataset.combo) {
+    const c = COMBOS.find(x => x.id === t.dataset.combo);
+    if (c) applyCombo(c);
+    renderMain();
+    return;
+  }
+  if (t.dataset.copyCombo) {
+    const c = COMBOS.find(x => x.id === t.dataset.copyCombo);
+    if (c) copyText("Style:\n" + c.style + "\n\nExclude Styles:\n" + c.exclude, "已複製「" + c.title + "」的兩欄。");
+  }
+}
+
+function bind() {
+  document.getElementById("elementChips").addEventListener("click", onClick);
+  document.getElementById("main").addEventListener("click", onClick);
+  document.getElementById("builder").addEventListener("click", ev => {
+    const del = ev.target.closest("[data-del-style],[data-del-ex]");
+    if (del) onClick(ev);
+  });
+  document.getElementById("search").addEventListener("input", ev => {
+    state.query = ev.target.value; persist(); renderMain();
+  });
+  document.getElementById("copyStyle").addEventListener("click", () => copyText(currentStyleOutput(), "已複製風格欄。"));
+  document.getElementById("copyEx").addEventListener("click", () => copyText(excludeString(), "已複製 Exclude。"));
+  document.getElementById("copyBoth").addEventListener("click", () => copyText("Style:\n" + currentStyleOutput() + "\n\nExclude Styles:\n" + excludeString(), "已複製風格欄與 Exclude。"));
+  document.getElementById("clearStyle").addEventListener("click", () => { state.styleIds = []; state.customStyle = ""; state.warnings = []; persist(); renderBuilder(); renderMain(); });
+  document.getElementById("clearEx").addEventListener("click", () => { state.excludes = []; state.warnings = []; persist(); renderBuilder(); renderMain(); });
+}
+
+restore();
+renderChips();
+document.getElementById("search").value = state.query || "";
+renderMain();
+renderBuilder();
+renderFooter();
+bind();
+</script>
+</body>
+</html>
